@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import {google} from "googleapis";
 
 const client_id = process.env.EMMENTHAL_CLIENT_ID;
 const client_secret = process.env.EMMENTHAL_CLIENT_SECRET;
@@ -12,14 +12,14 @@ export function getAuth() {
 }
 
 const SCOPES = [
-  'https://www.googleapis.com/auth/calendar.readonly',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/userinfo.profile',
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/userinfo.profile",
 ];
 
 export function getAuthUrl() {
   return googleAuth.generateAuthUrl({
     scope: SCOPES,
-    access_type: 'offline',
+    access_type: "offline",
   });
 }
