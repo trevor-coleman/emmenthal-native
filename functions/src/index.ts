@@ -15,6 +15,7 @@ export const auth = functions.https.onRequest(async (request, response) => {
   if (request.method === "OPTIONS") {
     console.log("options method");
     // Send response to OPTIONS requests
+    response.set("Access-Control-Allow-Origin", allowedOrigins); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
     response.set("Access-Control-Allow-Methods", "GET");
     response.set("Access-Control-Max-Age", "3600");
     response.status(204).send("");
@@ -110,8 +111,8 @@ export const freeBusy = functions.https.onRequest(async (request, response) => {
 
   if (request.method === "OPTIONS") {
     // Send response to OPTIONS requests
+    response.set("Access-Control-Allow-Origin", "http://localhost:19006"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
     response.set("Access-Control-Allow-Methods", "GET");
-    response.set("Access-Control-Max-Age", "3600");
     response.status(204).send("");
     return;
   }
