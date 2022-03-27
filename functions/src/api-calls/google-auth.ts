@@ -18,8 +18,10 @@ const SCOPES = [
 ];
 
 export function getAuthUrl() {
-  return googleAuth.generateAuthUrl({
+  const authUrl = googleAuth.generateAuthUrl({
     scope: SCOPES,
     access_type: "offline",
   });
+  console.log(`authUrl: ${authUrl}`);
+  return authUrl;
 }
