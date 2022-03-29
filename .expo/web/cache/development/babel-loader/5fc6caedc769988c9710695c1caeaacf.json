@@ -1,0 +1,1 @@
+{"ast":null,"code":"import \"./i18n\";\nexport * from \"./i18n\";\nexport * from \"./translate\";","map":{"version":3,"sources":["/Users/trevorcoleman/dev/trevor-coleman/EmmenthalCloud/app/i18n/index.ts"],"names":[],"mappings":"AAAA;AACA;AACA","sourcesContent":["import \"./i18n\"\nexport * from \"./i18n\"\nexport * from \"./translate\"\n"]},"metadata":{},"sourceType":"module"}
