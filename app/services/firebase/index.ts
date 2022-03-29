@@ -31,60 +31,33 @@ export function initialize() {
   return fb
 }
 
-const CLIENT_ID = "642341234083-66v5bmvrq9ubn0f34prhl42c3v3o0qrk.apps.googleusercontent.com"
 
 export function useGoogleSignIn() {
-  const { authStore } = useStores()
+  const { authStore, calendarStore } = useStores()
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: CLIENT_ID,
+    webClientId: env.GOOGLE_CLIENT_ID,
     scopes: SCOPES,
   })
+
 
   React.useEffect(() => {
     if (response?.type === "success") {
       authStore.handleSignInResponse(response)
+
+      const user = auth.currentUser;
+      authStore.setUser(user);
+
+      calendarStore.getCalendars();
+      calendarStore.getFreeBusy()
+
     }
+
+
   }, [response])
 
   return { request, response, promptAsync }
 }
 
-export function useFirebaseSignIn() {
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: CLIENT_ID,
-  })
-  React.useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params
-      const credential = GoogleAuthProvider.credential(id_token)
-      signInWithCredential(auth, credential)
-    }
-  }, [response])
 
-  return { request, promptAsync }
-}
 
-export async function useAltSignIn() {
-  const provider = new GoogleAuthProvider()
-  SCOPES.forEach((scope) => provider.addScope(scope))
-  try {
-    const result = await signInWithPopup(auth, provider)
-    // This gives you a Google Access Token. You can use it to access the Google API.
-    const credential = GoogleAuthProvider.credentialFromResult(result)
-    const token = credential.accessToken
-    // The signed-in user info.
-    const user = result.user
-    return { result, token, user }
-  } catch (error) {
-    // Handle Errors here.
-    const errorCode = error.code
-    const errorMessage = error.message
-    // The email of the user's account used.
-    const email = error.email
-    // The AuthCredential type that was used.
-    const credential = GoogleAuthProvider.credentialFromError(error)
-    console.log("Error: ", errorCode, errorMessage, email, credential)
-    return null
-  }
-}

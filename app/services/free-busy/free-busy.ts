@@ -12,7 +12,7 @@ import {
   add,
   format,
   getTime,
-  clamp,
+  clamp, addDays, differenceInCalendarDays,
 } from "date-fns"
 import { calendar_v3 } from "googleapis"
 
@@ -21,8 +21,8 @@ export type DaysTuple = [boolean, boolean, boolean, boolean, boolean, boolean, b
 export interface ICalendarOptions {
   date: {
     customDate?: Date | number | null
-    range: number | null
-    days: DaysTuple
+    daysForward: number | null
+    daysOfWeek: DaysTuple
   }
   time: {
     start: Date | number | null
@@ -33,13 +33,16 @@ export interface ICalendarOptions {
 
 export type FreeBusyData = Record<string, { busy: { start: Date | number; end: Date | number }[] }>
 
+
+
 export function findFreeTime(
   freeBusyData: FreeBusyData,
-  { time: timeOptions, date: { days: daysOfWeek } }: ICalendarOptions,
+  { time: timeOptions, date: { customDate, daysForward, daysOfWeek } }: ICalendarOptions,
 ): Interval[] {
-  const range: Interval = {
-    start: timeOptions?.start ?? set(new Date(), { hours: 9, minutes: 0 }),
-    end: timeOptions?.end ?? set(new Date(), { hours: 17, minutes: 0 }),
+
+  const timeOfDayRange: Interval = {
+    start: timeOptions?.start ?? set(new Date(0), { hours: 9, minutes: 0 }),
+    end: timeOptions?.end ?? set(new Date(0), { hours: 17, minutes: 0 }),
   }
 
   const { duration } = timeOptions
@@ -59,74 +62,107 @@ export function findFreeTime(
     return isBefore(a.start, b.end) ? -1 : 1
   })
 
-  let busy: Interval | undefined = queue.shift()
-  if (!busy) return []
+  let calendarEvent: Interval | undefined = queue.shift()
+  if (!calendarEvent) return []
 
-  function setTime(timeA: Date | number, timeB: Date | number) {
-    return set(timeA, {
-      hours: getHours(new Date(timeB)),
-      minutes: getMinutes(new Date(timeB)),
-    })
+
+
+  const startDate = customDate ?? addDays(new Date(), 1)
+
+  let periodOfInterest:Interval = {
+    start: startDate,
+    end: addDays(startDate, daysForward ?? 7)
   }
 
-  function getDayRange(interval: Interval) {
-    return {
-      start: setTime(interval.start, range.start),
-      end: setTime(interval.start, range.end),
-    }
-  }
+  let day = getDayRange(periodOfInterest, timeOfDayRange)
 
-  let day = getDayRange(busy)
-
-  let current: Interval = { start: day.start, end: day.start }
+  let currentBusyPeriod: Interval = { start: day.start, end: day.start }
 
   const freeTimes: Interval[] = []
 
-  while (busy) {
-    let { start, end } = busy
+  /**
+   * This is the core loop -- it iterates over the events in the calendar, and merges them into a single array of free times.
+   */
+  while (calendarEvent) {
+    let { start, end } = calendarEvent
 
-    //If event crosses midnight split (at midnight) into two events
-    if (getDay(start) !== getDay(end)) {
+
+    let eventCrossesMidnight = getDay(start) !== getDay(end);
+
+    if (eventCrossesMidnight) {
+      //split into two events
       queue.unshift({ start: startOfDay(end), end })
       end = endOfDay(start)
     }
 
-    //If next event is on a different day, reset day
-    if (getDay(current.end) !== getDay(start)) {
-      day = getDayRange(busy)
-      current.start = setTime(start, range.start)
-      current.end = current.start
+    // Handle events that start before or after the end of the day of the currentBusyPeriod.
+    if (getDay(currentBusyPeriod.end) !== getDay(start)) {
+
+      const skippedDays = differenceInCalendarDays(start, currentBusyPeriod.end) - 1;
+
+      // next day in calendar is before the beginning of the window.
+      // This happens when there are events in the queue before the start
+      // of the time the user cares about. (Shouldn't happen if we clean
+      // up our store properly)
+      if(skippedDays < 0) {
+        calendarEvent = queue.shift()
+        continue;
+      }
+
+      // next event in calendar is more than one day away -- add a blank day and move ahead
+      if(skippedDays > 0) {
+        currentBusyPeriod.start = setTime(addDays(currentBusyPeriod.start, 1), timeOfDayRange.start);
+          currentBusyPeriod.end = currentBusyPeriod.start;
+          freeTimes.push({
+            start: currentBusyPeriod.start,
+            end: setTime(currentBusyPeriod.start,timeOfDayRange.end)
+          });
+        continue;
+      }
+
+      // otherwise just move to the next day, and check again.
+      day = getDayRange(calendarEvent, timeOfDayRange)
+      currentBusyPeriod.start = setTime(start, timeOfDayRange.start)
+      currentBusyPeriod.end = currentBusyPeriod.start
     }
 
+    // ignore events on unselected days of the week
     if (!daysOfWeek[getDay(start)]) {
-      busy = queue.shift()
+      calendarEvent = queue.shift()
       continue
     }
 
     start = clamp(start, day)
     end = clamp(end, day)
 
-    if (start <= max([current.end, add(current.start, duration)])) {
-      if (end <= current.end) {
-        busy = queue.shift()
+
+    if (start <= max([currentBusyPeriod.end, add(currentBusyPeriod.start, duration)])) {
+      if (end <= currentBusyPeriod.end) {
+        calendarEvent = queue.shift()
         continue
       }
-      current.end = end
-      busy = queue.shift()
+      currentBusyPeriod.end = end
+      calendarEvent = queue.shift()
       continue
     }
     freeTimes.push({
-      start: current.end,
+      start: currentBusyPeriod.end,
       end: start,
     })
 
-    current.end = end
-    busy = queue.shift()
+    currentBusyPeriod.end = end
+    calendarEvent = queue.shift()
   }
 
-  return freeTimes
+  const paddedFreeTimes = addEmptyDaysAtEndIfNeeded(periodOfInterest, currentBusyPeriod, timeOfDayRange, daysOfWeek, freeTimes);
+
+
+  return paddedFreeTimes;
 }
 
+/**
+ * Take the freeTime array of intervals and render into copy-pasteable text.
+ */
 export function formatFreeTimeText(freeTime: Interval[]) {
   const lines: string[] = []
 
@@ -144,4 +180,46 @@ export function formatFreeTimeText(freeTime: Interval[]) {
   })
 
   return lines.join("\n")
+}
+
+/**
+ * If the last event in the FreeBusyData is earlier than the last day of the periodOfInterest,
+ * then add whole empty days for the rest of the available time.
+ */
+function addEmptyDaysAtEndIfNeeded(
+    periodOfInterest: Interval,
+    current: Interval,
+    timeOfDayRange: Interval,
+    daysOfWeek: DaysTuple,
+    freeTimes: Interval[]) {
+
+  const daysLeft = differenceInCalendarDays(periodOfInterest.end, current.end) - 1;
+  for (let i = daysLeft; i > 0; i--) {
+    current.start = setTime(addDays(current.start, 1), timeOfDayRange.start);
+    current.end = current.start;
+    //only add windows on selected days
+    if (daysOfWeek[getDay(current.start)]) {
+      freeTimes.push({
+        start: current.start,
+        end: setTime(current.start, timeOfDayRange.end)
+      });
+    }
+
+  }
+
+  return freeTimes;
+}
+
+function setTime(timeA: Date | number, timeB: Date | number) {
+  return set(timeA, {
+    hours: getHours(new Date(timeB)),
+    minutes: getMinutes(new Date(timeB)),
+  })
+}
+
+function getDayRange(interval: Interval, range:Interval) {
+  return {
+    start: setTime(interval.start, range.start),
+    end: setTime(interval.start, range.end),
+  }
 }

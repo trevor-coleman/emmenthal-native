@@ -3,11 +3,18 @@ import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import axios, { AxiosError, AxiosResponse } from "axios"
 import { calendar_v3 } from "googleapis"
 
+
 export interface IAuthContext {
   authUrl?: string
   authenticated: boolean
   user: any
 }
+
+
+interface  ValidateTokenResponseType {result: "success" | "fail"}
+interface IValidateTokenSuccess extends ValidateTokenResponseType { result: "success", contents: GoogleApiOAuth2TokenObject }
+interface IValidateTokenFailure extends ValidateTokenResponseType { result: "fail"}
+export type ValidateTokenResponse = IValidateTokenSuccess | IValidateTokenFailure
 
 /**
  * Manages all requests to the API.
@@ -69,6 +76,30 @@ export class Api {
     this.token = ""
   }
 
+  async validateToken(token): Promise<ValidateTokenResponse> {
+    try {
+      const response = await axios.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo?access_token=${token}`, {
+        baseURL: "https://www.googleapis.com"
+      })
+
+      if(response.status === 200) {
+        return {
+          result: "success",
+          contents: response.data
+        }
+      } else {
+        return {
+          result: "fail"
+        }
+      }
+
+    } catch (e) {
+      console.error(e);
+      return {result: "fail"};
+    }
+
+  }
+
   async getFreeBusy({
     timeMin,
     timeMax,
@@ -82,10 +113,10 @@ export class Api {
       calendar_v3.Schema$FreeBusyRequest,
       AxiosResponse<calendar_v3.Schema$FreeBusyResponse>
     >(
-      "/freeBusy",
+      "/calendar/v3/freeBusy",
       { timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), items: calendars },
       {
-        baseURL: "https://www.googleapis.com/calendar/v3",
+        baseURL: "https://www.googleapis.com",
         headers: {
           Authorization: "Bearer " + this.token,
         },

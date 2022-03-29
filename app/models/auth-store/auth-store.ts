@@ -1,56 +1,93 @@
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { UserModel } from "../user/user"
-import { api, IAuthContext } from "../../services/api"
-import { nanoid } from "nanoid"
+import {Instance, SnapshotOut, types, flow} from "mobx-state-tree"
+import {UserModel} from "../user/user"
+import {api} from "../../services/api"
+import {addSeconds} from "date-fns";
 
 /**
  * Model description here for TypeScript hints.
  */
 export const AuthStoreModel = types
-  .model("AuthStore")
-  .props({
-    authenticated: false,
-    lastLoginAttempt: types.maybe(types.string),
-    authUrl: types.maybe(types.string),
-    user: types.optional(UserModel, {}),
-    token: types.optional(types.string, ""),
-  })
-  .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions((self) => ({
-    handleSignIn(result: IAuthContext) {
-      console.table("signIn Result", result)
-      const { authUrl, authenticated, user } = result
+    .model("AuthStore")
+    .props({
+      authenticated: false,
+      lastLoginAttempt: types.maybe(types.string),
+      user: types.maybe(UserModel),
+      token: types.optional(types.string, ""),
+      tokenExpires: types.maybe(types.Date),
+      validationState: types.optional(types.enumeration("ValidationState", ["pending", "valid", "invalid", "init"]), "init")
+    })
 
-      self.authUrl = authUrl
-      self.authenticated = authenticated
-      self.user = user
-    },
-    setLastLoginAttempt(id: string) {
-      self.lastLoginAttempt = id
-    },
-  }))
-  .actions((self) => ({
-    handleSignInResponse(response) {
-      const { authentication } = response
-      self.token = authentication.accessToken
-      api.setToken(authentication.accessToken)
-    },
-  }))
-  .actions((self) => ({
-    attemptSignIn(router) {
-      if (self.authUrl) {
-        void router.push(self.authUrl)
+    .actions((self) => ({
+      signOut() {
+        self.token = "";
+        self.validationState = "init";
+        api.setToken("");
+        self.user = undefined;
+      },
+      setUser(user) {
+
+        console.log(user);
+
+        const {
+          uid,
+          email,
+          emailVerified,
+          displayName,
+          isAnonymous,
+          photoURL,
+        } = user;
+
+        console.log(user);
+        self.user = {
+          uid,
+          email,
+          emailVerified,
+          displayName,
+          isAnonymous,
+          photoURL,
+        };
       }
-      self.setLastLoginAttempt(nanoid())
-    },
-  }))
+    }))
+    .actions((self) => ({
+      validateToken: flow(function* validateToken() {
+        self.validationState = "pending"
+        const response = yield api.validateToken(self.token)
+        if (response.result === "success") {
+          const {contents} = response;
+          self.tokenExpires = addSeconds(new Date(), parseInt(contents.expires_in));
+          api.token = self.token;
+          self.validationState = "valid"
+        } else {
+          api.token = "";
+          self.signOut();
+          self.validationState = "invalid"
+        }
+      })
+    }))
+    .actions((self) => ({
+      handleSignInResponse(response) {
+        console.log("handleSignInResponse", response);
+        if (response.type === "success") {
+          const {authentication} = response
+          self.token = authentication.accessToken
+          api.setToken(authentication.accessToken)
+        } else {
+          self.signOut();
+        }
+      },
+    }))
+
 
 type AuthStoreType = Instance<typeof AuthStoreModel>
 
-export interface AuthStore extends AuthStoreType {}
+export interface AuthStore extends AuthStoreType {
+}
 
 type AuthStoreSnapshotType = SnapshotOut<typeof AuthStoreModel>
 
-export interface AuthStoreSnapshot extends AuthStoreSnapshotType {}
+export interface AuthStoreSnapshot extends AuthStoreSnapshotType {
+}
 
 export const createAuthStoreDefaultModel = () => types.optional(AuthStoreModel, {})
+
+

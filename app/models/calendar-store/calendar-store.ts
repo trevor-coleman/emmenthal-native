@@ -5,7 +5,7 @@ import type { FreeBusyItem } from "../free-busy-item/free-busy-item"
 import { AxiosResponse } from "axios"
 import { calendar_v3 } from "googleapis"
 import { findFreeTime, formatFreeTimeText } from "../../services/free-busy/free-busy"
-import { set, subDays } from "date-fns"
+import {addDays, set, subDays} from "date-fns"
 
 /**
  * Model description here for TypeScript hints.
@@ -16,6 +16,8 @@ export const CalendarStoreModel = types
     calendars: types.optional(types.map(CalendarModel), {}),
     selectedIds: types.optional(types.array(types.string), []),
     freeTimeText: types.optional(types.string, ""),
+    startDate: types.optional(types.Date, addDays(new Date(), 1)),
+    daysForward: types.optional(types.number, 7),
   })
 
   .views((self) => ({
@@ -38,17 +40,6 @@ export const CalendarStoreModel = types
         self.calendars.set(calendar.id, calendar)
       })
     },
-    handleGetFreeBusyResponse(response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse>): void {
-      console.log("handling freeBusy Response", response)
-      const {
-        data: { calendars },
-      } = response
-      if (!calendars) return
-      Object.entries(calendars).forEach(([id, { busy }]) => {
-        const calendar = self.calendars.get(id)
-        calendar.setBusy(busy)
-      })
-    },
     updateFreeTimeText() {
       const selectedCalendars = {}
 
@@ -64,13 +55,13 @@ export const CalendarStoreModel = types
 
       const freeTimes = findFreeTime(selectedCalendars, {
         date: {
-          customDate: undefined,
-          range: 3,
-          days: [false, true, true, true, true, true, false],
+          customDate: self.startDate,
+          daysForward: self.daysForward,
+          daysOfWeek: [false, true, true, true, true, true, false],
         },
         time: {
-          start: set(new Date(), { hours: 10, minutes: 0 }),
-          end: set(new Date(), { hours: 20, minutes: 0 }),
+          start: set(new Date(0), { hours: 10, minutes: 0 }),
+          end: set(new Date(0), { hours: 20, minutes: 0 }),
           duration: { hours: 1, minutes: 0 },
         },
       })
@@ -79,19 +70,18 @@ export const CalendarStoreModel = types
     },
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => ({
-    async getCalendars(): Promise<void> {
-      const response = await api.getCalendars()
-      self.handleGetCalendarResponse(response)
-    },
-    async getFreeBusy({ timeMin, timeMax }): Promise<void> {
-      const response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse> = await api.getFreeBusy({
-        timeMin,
-        timeMax,
-        calendars: self.calendarIds,
+    handleGetFreeBusyResponse(response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse>): void {
+      console.log("handling freeBusy Response", response)
+      const {
+        data: { calendars },
+      } = response
+      if (!calendars) return
+      Object.entries(calendars).forEach(([id, { busy }]) => {
+        const calendar = self.calendars.get(id)
+        calendar.setBusy(busy)
       })
-      self.handleGetFreeBusyResponse(response)
+      self.updateFreeTimeText()
     },
-
     calendarList() {
       const result = []
       self.calendars.forEach((calendar) => {
@@ -104,14 +94,32 @@ export const CalendarStoreModel = types
     },
   }))
   .actions((self) => ({
-    setCalendarSelected(target: string, selected: boolean) {
-      self.selectedIds.replace(self.selectedIds.filter((id) => id !== target))
-      if (selected) {
-        self.selectedIds.push(target)
-      }
-      self.updateFreeTimeText()
+    async getCalendars(): Promise<void> {
+      const response = await api.getCalendars()
+      self.handleGetCalendarResponse(response)
     },
-  }))
+    async getFreeBusy(): Promise<void> {
+      const response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse> = await api.getFreeBusy({
+        timeMin: self.startDate,
+        timeMax: addDays(self.startDate, self.daysForward),
+        calendars: self.calendarIds,
+      })
+      self.handleGetFreeBusyResponse(response)
+    },
+    signOut() {
+      self.calendars.replace([])
+      self.selectedIds.replace([])
+      self.freeTimeText = "";
+    }
+  })).actions(self=>({
+      setCalendarSelected(target: string, selected: boolean) {
+        self.selectedIds.replace(self.selectedIds.filter((id) => id !== target))
+        if (selected) {
+          self.selectedIds.push(target)
+        }
+        self.getFreeBusy()
+      },
+    }))
 
 type CalendarStoreType = Instance<typeof CalendarStoreModel>
 

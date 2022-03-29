@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, {FC, useEffect} from "react"
 import { observer } from "mobx-react-lite"
 import { TextStyle, View, ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
@@ -6,13 +6,11 @@ import { NavigatorParamList } from "../../navigators"
 import { Button, Text, Layout, Divider } from "@ui-kitten/components"
 import { color } from "../../theme"
 import * as WebBrowser from "expo-web-browser"
-import { addDays, subDays } from "date-fns"
-
-import { auth, useGoogleSignIn } from "../../services/firebase"
-import { api } from "../../services/api"
+import { addDays} from "date-fns"
+import { useGoogleSignIn } from "../../services/firebase"
 import { useStores } from "../../models"
-import { formatFreeTimeText } from "../../services/free-busy/free-busy"
 import { CalendarList } from "../../components"
+import {api} from "../../services/api";
 
 const ROOT: ViewStyle = {
   backgroundColor: color.palette.black,
@@ -36,9 +34,39 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
     const { request, promptAsync } = useGoogleSignIn()
     const { authStore, calendarStore } = useStores()
 
-    const calendarId = calendarStore.calendarIds[8].id
+    console.log(authStore.validationState);
+
+    switch(authStore.validationState) {
+      case "init":
+        handleInit();
+        break;
+      case "invalid":
+        handleInvalid();
+        break;
+    }
+
+    function handleInit () {
+      if(authStore.token) {
+        authStore.validateToken()
+      }
+    }
+
+    function handleInvalid() {
+      authStore.signOut();
+      calendarStore.signOut();
+    }
 
     const freeTimes = calendarStore.freeTimeText
+
+    console.log(authStore?.user?.displayName);
+
+    useEffect(()=>{
+      if(authStore.validationState === "valid") {
+        api.setToken(authStore.token)
+      } else {
+        api.clearToken()
+      }
+    }, [authStore.token])
 
     return (
       <Layout
@@ -50,8 +78,8 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
         }}
       >
         <View>
-          <Text category={"h2"}>{`${auth.currentUser?.displayName ?? "Signed Out"}`}</Text>
-          <Button
+          <Text category={"h2"}>{`${authStore?.user?.displayName ?? "Signed Out"}`}</Text>
+          {authStore.validationState !== "valid" ? <Button
             style={BUTTON}
             disabled={!request}
             onPress={async () => {
@@ -59,7 +87,16 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
             }}
           >
             Sign In
-          </Button>
+          </Button> : <Button
+              style={BUTTON}
+              disabled={!request}
+              onPress={async () => {
+                authStore.signOut();
+                calendarStore.signOut();
+              }}
+          >
+            Sign Out
+          </Button>}
 
           <Button
             style={BUTTON}
@@ -75,10 +112,7 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
             style={BUTTON}
             disabled={authStore.token === ""}
             onPress={async () => {
-              await calendarStore.getFreeBusy({
-                timeMax: addDays(new Date(), 7),
-                timeMin: new Date(),
-              })
+              await calendarStore.getFreeBusy()
             }}
           >
             Get Free Busy
