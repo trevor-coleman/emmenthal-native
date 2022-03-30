@@ -26,7 +26,7 @@ export const AuthStoreModel = types
       },
       setUser(user) {
 
-        console.log(user);
+
 
         const {
           uid,
@@ -37,7 +37,7 @@ export const AuthStoreModel = types
           photoURL,
         } = user;
 
-        console.log(user);
+
         self.user = {
           uid,
           email,
@@ -66,7 +66,7 @@ export const AuthStoreModel = types
     }))
     .actions((self) => ({
       handleSignInResponse(response) {
-        console.log("handleSignInResponse", response);
+
         if (response.type === "success") {
           const {authentication} = response
           self.token = authentication.accessToken

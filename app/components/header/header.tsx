@@ -1,61 +1,43 @@
-import React from "react"
-import { View, ViewStyle, TextStyle } from "react-native"
-import { HeaderProps } from "./header.props"
-import { Button } from "../button/button"
-import { Text } from "../text/text"
-import { Icon } from "../icon/icon"
-import { spacing } from "../../theme"
-import { translate } from "../../i18n/"
+import * as React from "react"
+import {StyleProp, TextStyle, View, ViewStyle} from "react-native"
+import {observer} from "mobx-react-lite"
+import {color, spacing, typography} from "../../theme"
+import {Text} from "@ui-kitten/components"
+import {useStores} from "../../models";
+import {SignInButton} from "../sign-in-button/sign-in-button";
 
-// static styles
-const ROOT: ViewStyle = {
-  flexDirection: "row",
-  paddingHorizontal: spacing[4],
-  alignItems: "center",
-  paddingTop: spacing[5],
-  paddingBottom: spacing[5],
+const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
+  display:"flex",
+  flexDirection:"row",
+  padding: spacing[2]
 }
-const TITLE: TextStyle = { textAlign: "center" }
-const TITLE_MIDDLE: ViewStyle = { flex: 1, justifyContent: "center" }
-const LEFT: ViewStyle = { width: 32 }
-const RIGHT: ViewStyle = { width: 32 }
+
+const HEADER_VIEW: ViewStyle = {
+  flexGrow:1,
+}
+
+export interface HeaderProps {
+  /**
+   * An optional style override useful for padding & margin.
+   */
+  style?: StyleProp<ViewStyle>
+}
 
 /**
- * Header that appears on many screens. Will hold navigation buttons and screen title.
+ * Describe your component here
  */
-export function Header(props: HeaderProps) {
-  const {
-    onLeftPress,
-    onRightPress,
-    rightIcon,
-    leftIcon,
-    headerText,
-    headerTx,
-    style,
-    titleStyle,
-  } = props
-  const header = headerText || (headerTx && translate(headerTx)) || ""
+export const Header = observer(function Header(props: HeaderProps) {
+  const {style} = props
+  const styles = Object.assign({}, CONTAINER, style)
+  const {authStore} = useStores();
 
   return (
-    <View style={[ROOT, style]}>
-      {leftIcon ? (
-        <Button preset="link" onPress={onLeftPress}>
-          <Icon icon={leftIcon} />
-        </Button>
-      ) : (
-        <View style={LEFT} />
-      )}
-      <View style={TITLE_MIDDLE}>
-        <Text style={[TITLE, titleStyle]} text={header} />
+      <View style={styles}>
+        <View style={HEADER_VIEW}>
+          <Text category={"h1"}>{`Emmenthal - ${authStore?.user?.displayName ?? "Signed Out"}`}</Text>
+        </View>
+        <View><SignInButton/></View>
       </View>
-      {rightIcon ? (
-        <Button preset="link" onPress={onRightPress}>
-          <Icon icon={rightIcon} />
-        </Button>
-      ) : (
-        <View style={RIGHT} />
-      )}
-    </View>
   )
-}
+})

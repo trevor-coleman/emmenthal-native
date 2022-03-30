@@ -1,6 +1,6 @@
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
+import {flow, Instance, SnapshotOut, types} from "mobx-state-tree"
 import { CalendarModel } from "../calendar/calendar"
-import { api } from "../../services/api"
+import {api, GetFreeBusyResponse, GetFreeBusySuccess} from "../../services/api"
 import type { FreeBusyItem } from "../free-busy-item/free-busy-item"
 import { AxiosResponse } from "axios"
 import { calendar_v3 } from "googleapis"
@@ -29,6 +29,16 @@ export const CalendarStoreModel = types
     get calendarIds(): { id: string }[] {
       const result = []
       self.calendars.forEach(({ id }) => result.push({ id }))
+      return result
+    },
+    get calendarList() {
+      const result = []
+      self.calendars.forEach((calendar) => {
+        result.push({
+          id: calendar.id,
+          label: calendar?.summaryOverride ?? calendar?.summary,
+        })
+      })
       return result
     },
   }))
@@ -69,12 +79,12 @@ export const CalendarStoreModel = types
       self.freeTimeText = formatFreeTimeText(freeTimes)
     },
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions((self) => ({
-    handleGetFreeBusyResponse(response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse>): void {
-      console.log("handling freeBusy Response", response)
-      const {
-        data: { calendars },
-      } = response
+    .actions((self) => ({
+     async handleGetFreeBusyResponse (response: GetFreeBusySuccess) {
+       const {
+        calendars ,
+      } = response.data;
+
       if (!calendars) return
       Object.entries(calendars).forEach(([id, { busy }]) => {
         const calendar = self.calendars.get(id)
@@ -82,32 +92,27 @@ export const CalendarStoreModel = types
       })
       self.updateFreeTimeText()
     },
-    calendarList() {
-      const result = []
-      self.calendars.forEach((calendar) => {
-        result.push({
-          id: calendar.id,
-          label: calendar?.summaryOverride ?? calendar?.summary,
-        })
-      })
-      return result
-    },
+
   }))
   .actions((self) => ({
     async getCalendars(): Promise<void> {
       const response = await api.getCalendars()
+      console.log(response);
       self.handleGetCalendarResponse(response)
     },
     async getFreeBusy(): Promise<void> {
-      const response: AxiosResponse<calendar_v3.Schema$FreeBusyResponse> = await api.getFreeBusy({
+      const response: GetFreeBusyResponse = await api.getFreeBusy({
         timeMin: self.startDate,
         timeMax: addDays(self.startDate, self.daysForward),
         calendars: self.calendarIds,
       })
-      self.handleGetFreeBusyResponse(response)
+      if(response.result === "success") {
+        self.handleGetFreeBusyResponse(response)
+      }
     },
     signOut() {
-      self.calendars.replace([])
+      console.log("signOut")
+      self.calendars.clear();
       self.selectedIds.replace([])
       self.freeTimeText = "";
     }

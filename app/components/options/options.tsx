@@ -2,15 +2,15 @@ import * as React from "react"
 import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
 import { observer } from "mobx-react-lite"
 import { color, typography } from "../../theme"
-import { Text, Divider } from "@ui-kitten/components"
-import { useStores } from "../../models"
-import { CalendarCheckbox } from "../calendar-checkbox/calendar-checkbox"
+
+import {Button, Text} from "@ui-kitten/components";
 
 const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
   alignItems:"flex-start",
-  maxWidth: 300,
   minWidth: 200,
+  maxWidth: 300,
+  marginHorizontal:20,
   borderRightWidth: 1,
   borderRightColor: "#eee"
 }
@@ -21,7 +21,7 @@ const TEXT: TextStyle = {
   color: color.primary,
 }
 
-export interface CalendarListProps {
+export interface OptionsProps {
   /**
    * An optional style override useful for padding & margin.
    */
@@ -31,18 +31,20 @@ export interface CalendarListProps {
 /**
  * Describe your component here
  */
-export const CalendarList = observer(function CalendarList(props: CalendarListProps) {
+export const Options = observer(function Options(props: OptionsProps) {
   const { style } = props
   const styles = Object.assign({}, CONTAINER, style)
-  const { calendarStore } = useStores()
 
   return (
     <View style={styles}>
-      <Text category={"h2"}>Calendars</Text>
-      <Divider/>
-      {calendarStore.calendarList.map(({ id, label }) => (
-        <CalendarCheckbox key={id} id={id} label={label} />
-      ))}
+      <Text category={"h2"}>Options</Text>
+      <Text>Hello</Text>
+      <Text category={"h4"}>Date Range</Text>
+      <Text>Hello</Text>
+      <Text category={"h4"}>Time Range</Text>
+      <Text>Hello</Text>
+      <Text category={"h4"}>Days of the Week</Text>
+      <Text>Hello</Text>
     </View>
   )
 })
