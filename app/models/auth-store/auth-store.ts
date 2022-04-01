@@ -72,7 +72,6 @@ export const AuthStoreModel = types
       }
     },
     async validateToken() {
-      console.log(`validating ${self.token}`)
       self.validationState = "pending"
 
       const response = await self.environment.api.validateToken(self.token)

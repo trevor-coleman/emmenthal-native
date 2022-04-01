@@ -57,11 +57,15 @@ export const UserInfo = observer(function UserInfo(props: UserInfoProps) {
 
   return (
     <View style={styles}>
-      <View style={TEXT_CONTAINER}>
-        <Text style={USER_NAME}>{authStore.user.name}</Text>
-        <Text style={USER_EMAIL}>{authStore.user.email}</Text>
-      </View>
-      <Image source={{ uri: authStore.user.picture }} style={USER_PICTURE} />
+      {authStore.user ? (
+        <>
+          <View style={TEXT_CONTAINER}>
+            <Text style={USER_NAME}>{authStore.user.name}</Text>
+            <Text style={USER_EMAIL}>{authStore.user.email}</Text>
+          </View>
+          <Image source={{ uri: authStore.user.picture }} style={USER_PICTURE} />
+        </>
+      ) : null}
     </View>
   )
 })

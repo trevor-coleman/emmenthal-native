@@ -132,7 +132,6 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
               setStartHour(timeRange.startHour.toString())
             } else {
               updateTimeValue(parseInt(startHour), "startHour")
-              console.log(startHour)
             }
           }}
         />
