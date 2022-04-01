@@ -1,0 +1,3 @@
+[submodule "web-build"]
+	path = web-build
+	url = git@github.com:trevor-coleman/emmenthal-native-build.git
