@@ -3,16 +3,19 @@ import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
 import { observer } from "mobx-react-lite"
 import { color, typography } from "../../theme"
 
-import {Button, Text} from "@ui-kitten/components";
+import { Button, Text } from "@ui-kitten/components"
+import { DateRange } from "../date-range/date-range"
+import { TimeRange } from "../time-range/time-range"
+import { DaysOfTheWeek } from "../days-of-the-week/days-of-the-week"
 
 const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
-  alignItems:"flex-start",
-  minWidth: 200,
-  maxWidth: 300,
-  marginHorizontal:20,
+  alignItems: "flex-start",
+  minWidth: 300,
+  maxWidth: 500,
+  marginHorizontal: 20,
   borderRightWidth: 1,
-  borderRightColor: "#eee"
+  borderRightColor: "#eee",
 }
 
 const TEXT: TextStyle = {
@@ -38,13 +41,11 @@ export const Options = observer(function Options(props: OptionsProps) {
   return (
     <View style={styles}>
       <Text category={"h2"}>Options</Text>
-      <Text>Hello</Text>
-      <Text category={"h4"}>Date Range</Text>
-      <Text>Hello</Text>
+      <DateRange />
       <Text category={"h4"}>Time Range</Text>
-      <Text>Hello</Text>
+      <TimeRange />
       <Text category={"h4"}>Days of the Week</Text>
-      <Text>Hello</Text>
+      <DaysOfTheWeek />
     </View>
   )
 })

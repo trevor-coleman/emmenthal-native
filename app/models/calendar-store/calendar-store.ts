@@ -1,11 +1,9 @@
-import {flow, Instance, SnapshotOut, types} from "mobx-state-tree"
+import { Instance, SnapshotOut, types } from "mobx-state-tree"
 import { CalendarModel } from "../calendar/calendar"
-import {api, GetFreeBusyResponse, GetFreeBusySuccess} from "../../services/api"
-import type { FreeBusyItem } from "../free-busy-item/free-busy-item"
-import { AxiosResponse } from "axios"
-import { calendar_v3 } from "googleapis"
-import { findFreeTime, formatFreeTimeText } from "../../services/free-busy/free-busy"
-import {addDays, set, subDays} from "date-fns"
+import { api, GetFreeBusyResponse, GetFreeBusySuccess } from "../../services/api"
+import { DaysTuple, findFreeTime, formatFreeTimeText } from "../../services/free-busy/free-busy"
+import { addDays, set } from "date-fns"
+import { TimeRangeModel } from "../time-range/time-range"
 
 /**
  * Model description here for TypeScript hints.
@@ -18,6 +16,23 @@ export const CalendarStoreModel = types
     freeTimeText: types.optional(types.string, ""),
     startDate: types.optional(types.Date, addDays(new Date(), 1)),
     daysForward: types.optional(types.number, 7),
+    daysOfTheWeek: types.optional(types.array(types.boolean), [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ]),
+    timeRange: types.optional(TimeRangeModel, {
+      startHour: 10,
+      startMinute: 30,
+      endHour: 18,
+      endMinute: 30,
+      startMeridiem: "AM",
+      endMeridiem: "PM",
+    }),
   })
 
   .views((self) => ({
@@ -40,6 +55,36 @@ export const CalendarStoreModel = types
         })
       })
       return result
+    },
+    get timeRangeInfo(): { start: Date; end: Date; duration: Duration } {
+      const {
+        startHour,
+        startMinute,
+        endHour,
+        endMinute,
+        startMeridiem,
+        endMeridiem,
+      } = self.timeRange
+
+      console.log({ endHour, endMeridiem, endMinute })
+
+      const start = {
+        hours: startMeridiem === "AM" ? startHour : startHour + 12,
+        minutes: startMinute,
+      }
+
+      const end = {
+        hours: endMeridiem === "AM" ? endHour : endHour + 12,
+        minutes: endMinute,
+      }
+
+      console.log({ start, end })
+
+      return {
+        start: set(new Date(0), start),
+        end: set(new Date(0), end),
+        duration: { hours: 1, minutes: 0 },
+      }
     },
   }))
   .actions((self) => ({
@@ -67,23 +112,19 @@ export const CalendarStoreModel = types
         date: {
           customDate: self.startDate,
           daysForward: self.daysForward,
-          daysOfWeek: [false, true, true, true, true, true, false],
+          daysOfWeek: (self.daysOfTheWeek as unknown) as DaysTuple,
         },
-        time: {
-          start: set(new Date(0), { hours: 10, minutes: 0 }),
-          end: set(new Date(0), { hours: 20, minutes: 0 }),
-          duration: { hours: 1, minutes: 0 },
-        },
+        time: self.timeRangeInfo,
       })
+
+      console.log({ freeTimes })
 
       self.freeTimeText = formatFreeTimeText(freeTimes)
     },
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
-    .actions((self) => ({
-     async handleGetFreeBusyResponse (response: GetFreeBusySuccess) {
-       const {
-        calendars ,
-      } = response.data;
+  .actions((self) => ({
+    async handleGetFreeBusyResponse(response: GetFreeBusySuccess) {
+      const { calendars } = response.data
 
       if (!calendars) return
       Object.entries(calendars).forEach(([id, { busy }]) => {
@@ -92,12 +133,11 @@ export const CalendarStoreModel = types
       })
       self.updateFreeTimeText()
     },
-
   }))
   .actions((self) => ({
     async getCalendars(): Promise<void> {
       const response = await api.getCalendars()
-      console.log(response);
+      console.log(response)
       self.handleGetCalendarResponse(response)
     },
     async getFreeBusy(): Promise<void> {
@@ -106,25 +146,38 @@ export const CalendarStoreModel = types
         timeMax: addDays(self.startDate, self.daysForward),
         calendars: self.calendarIds,
       })
-      if(response.result === "success") {
+      if (response.result === "success") {
         self.handleGetFreeBusyResponse(response)
       }
     },
     signOut() {
       console.log("signOut")
-      self.calendars.clear();
+      self.calendars.clear()
       self.selectedIds.replace([])
-      self.freeTimeText = "";
-    }
-  })).actions(self=>({
-      setCalendarSelected(target: string, selected: boolean) {
-        self.selectedIds.replace(self.selectedIds.filter((id) => id !== target))
-        if (selected) {
-          self.selectedIds.push(target)
-        }
-        self.getFreeBusy()
-      },
-    }))
+      self.freeTimeText = ""
+    },
+  }))
+  .actions((self) => ({
+    setDaysForward(daysForward: number) {
+      self.daysForward = daysForward
+      self.getFreeBusy()
+    },
+    setCalendarSelected(target: string, selected: boolean) {
+      self.selectedIds.replace(self.selectedIds.filter((id) => id !== target))
+      if (selected) {
+        self.selectedIds.push(target)
+      }
+      self.getFreeBusy()
+    },
+    setDay(index, checked) {
+      self.daysOfTheWeek[index] = checked
+      self.updateFreeTimeText()
+    },
+    setAllDays(newDays) {
+      self.daysOfTheWeek.replace(newDays)
+      self.updateFreeTimeText()
+    },
+  }))
 
 type CalendarStoreType = Instance<typeof CalendarStoreModel>
 

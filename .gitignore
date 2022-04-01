@@ -186,3 +186,5 @@ app/config/*
 .env
 .env.*
 env.*
+
+.DS_Strore

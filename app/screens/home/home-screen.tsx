@@ -30,9 +30,19 @@ WebBrowser.maybeCompleteAuthSession()
 
 export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = observer(
     function HomeScreen() {
-      const [calendars, setCalendars] = React.useState([])
-      const {request, promptAsync} = useGoogleSignIn()
       const {authStore, calendarStore} = useStores()
+
+      const handleInit = () => {
+        if (authStore.token) {
+          authStore.validateToken()
+        }
+      }
+
+      const handleInvalid = () => {
+        console.log("handleInvalid")
+        authStore.signOut();
+        calendarStore.signOut();
+      }
 
       switch (authStore.validationState) {
         case "init":
@@ -43,26 +53,7 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
           break;
       }
 
-      function handleInit() {
-        if (authStore.token) {
-          authStore.validateToken()
-        }
-      }
 
-      function handleInvalid() {
-        authStore.signOut();
-        calendarStore.signOut();
-      }
-
-
-
-      useEffect(() => {
-        if (authStore.validationState === "valid") {
-          api.setToken(authStore.token)
-        } else {
-          api.clearToken()
-        }
-      }, [authStore.token])
 
       return (
           <Layout

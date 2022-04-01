@@ -7,7 +7,9 @@ import { RootStore } from "./root-store"
  * - Consume stores in our screens (or other components, though it's
  *   preferable to just connect screens)
  */
-const RootStoreContext = createContext<RootStore>({} as RootStore)
+export const store:RootStore = {} as RootStore;
+
+export const RootStoreContext = createContext<RootStore>(store)
 
 /**
  * The provider our root component will use to expose the root store

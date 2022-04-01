@@ -1,8 +1,9 @@
-import { ApisauceInstance, create } from "apisauce"
-import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
+import {ApisauceInstance, create} from "apisauce"
+import {ApiConfig, DEFAULT_API_CONFIG} from "./api-config"
 import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios"
-import { calendar_v3 } from "googleapis"
+import {calendar_v3} from "googleapis"
 
+import {store} from "../../models";
 
 
 export interface IAuthContext {
@@ -12,17 +13,41 @@ export interface IAuthContext {
 }
 
 
-interface  ApiResponse {result: "success" | "fail"}
-interface IValidateTokenSuccess extends ApiResponse { result: "success", contents: GoogleApiOAuth2TokenObject }
-interface IValidateTokenFailure extends ApiResponse { result: "fail"}
+interface ApiResponse {
+  result: "success" | "fail"
+}
+
+interface IValidateTokenSuccess extends ApiResponse {
+  result: "success",
+  contents: GoogleApiOAuth2TokenObject
+}
+
+interface IValidateTokenFailure extends ApiResponse {
+  result: "fail"
+}
+
 export type ValidateTokenResponse = IValidateTokenSuccess | IValidateTokenFailure
 
-export interface GetFreeBusySuccess extends ApiResponse { result: "success", data:calendar_v3.Schema$FreeBusyResponse}
-interface GetFreeBusyFailure extends ApiResponse {result:"fail"}
+export interface GetFreeBusySuccess extends ApiResponse {
+  result: "success",
+  data: calendar_v3.Schema$FreeBusyResponse
+}
+
+interface GetFreeBusyFailure extends ApiResponse {
+  result: "fail"
+}
+
 export type GetFreeBusyResponse = GetFreeBusySuccess | GetFreeBusyFailure;
 
-export interface GetCalendarsSuccess extends ApiResponse { result: "success", data:calendar_v3.Schema$CalendarList}
-interface GetCalendarsFailure extends ApiResponse {result:"fail"}
+export interface GetCalendarsSuccess extends ApiResponse {
+  result: "success",
+  data: calendar_v3.Schema$CalendarList
+}
+
+interface GetCalendarsFailure extends ApiResponse {
+  result: "fail"
+}
+
 export type GetCalendarsResponse = GetCalendarsSuccess | GetCalendarsFailure;
 
 /**
@@ -49,34 +74,27 @@ export class Api {
     this.config = config
   }
 
-  /**
-   * Sets up the API.  This will be called during the bootup
-   * sequence and will happen before the first React component
-   * is mounted.
-   *
-   * Be as quick as possible in here.
-   */
-  setup() {
 
+  setup() {
 
   }
 
   async getCalendars(): Promise<GetCalendarsResponse> {
     try {
       const res = await axios.get("calendar/v3/users/me/calendarList", {
-        baseURL: "https://www.googleapis.com",
+        baseURL:"https://www.googleapis.com",
         headers: {
           Authorization: "Bearer " + this.token,
-        },})
+        },
+      })
       return {
         result: "success",
         data: res.data
       }
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e)
       return {
-        result:'fail'
+        result: 'fail'
       }
     }
   }
@@ -92,13 +110,13 @@ export class Api {
   async validateToken(token): Promise<ValidateTokenResponse> {
     try {
       const response = await axios.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo`, {
-        baseURL: "https://www.googleapis.com",
+        baseURL:"https://www.googleapis.com",
         headers: {
           Authorization: "Bearer " + this.token,
         },
       })
 
-      if(response.status === 200) {
+      if (response.status === 200) {
         return {
           result: "success",
           contents: response.data
@@ -117,38 +135,36 @@ export class Api {
   }
 
   async getFreeBusy({
-    timeMin,
-    timeMax,
-    calendars,
-  }: {
+                      timeMin,
+                      timeMax,
+                      calendars,
+                    }: {
     timeMin: Date
     timeMax: Date
     calendars: { id: string }[]
-  }):Promise<GetFreeBusyResponse> {
-    try{
-    const response = await axios.post<
-      calendar_v3.Schema$FreeBusyRequest,
-      AxiosResponse<calendar_v3.Schema$FreeBusyResponse>
-    >(
-      "/calendar/v3/freeBusy",
-      { timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), items: calendars },
-      {
-        baseURL: "https://www.googleapis.com",
-        headers: {
-          Authorization: "Bearer " + this.token,
-        },
-      },
-    )
+  }): Promise<GetFreeBusyResponse> {
+    try {
+      const response = await axios.post<calendar_v3.Schema$FreeBusyRequest,
+          AxiosResponse<calendar_v3.Schema$FreeBusyResponse>>(
+          "/calendar/v3/freeBusy",
+          {timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), items: calendars},
+          {
+            baseURL:"https://www.googleapis.com",
+            headers: {
+              Authorization: "Bearer " + this.token,
+            },
+          },
+      )
 
       return {
         result: "success",
         data: response.data
       }
-  } catch (e) {
+    } catch (e) {
       console.error(e)
-      return {result:"fail"}
+      return {result: "fail"}
     }
   }
 }
 
-export const api = new Api()
+export const api = new Api();

@@ -34,24 +34,26 @@ export const SignInButton = observer(function SignInButton(props: SignInButtonPr
   const {request, promptAsync} = useGoogleSignIn()
 
   return (
-      authStore.validationState !== "valid"
-          ? <Button
-              disabled={!request}
-              onPress={async () => {
-                await promptAsync()
-              }}
-          >
-            Sign In
-          </Button>
-          : <Button
-              disabled={!request}
-              onPress={async () => {
-                authStore.signOut();
-                calendarStore.signOut();
-              }}
-          >
-            Sign Out
-          </Button>
+      <View>
+        {authStore.validationState !== "valid"
+            ? <Button
+                disabled={!request}
+                onPress={async () => {
+                  await promptAsync()
+                }}
+            >
+              Sign In
+            </Button>
+            : <Button
+                disabled={!request}
+                onPress={async () => {
+                  authStore.signOut();
+                  calendarStore.signOut();
+                }}
+            >
+              Sign Out
+            </Button>}
+      </View>
 
   )
 })
