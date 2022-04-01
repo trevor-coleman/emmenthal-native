@@ -1,5 +1,7 @@
 import { Instance, SnapshotOut, types, hasParent, getParent } from "mobx-state-tree"
 import { CalendarStore } from "../calendar-store/calendar-store"
+import { withEnvironment } from "../extensions/with-environment"
+import { withRootStore } from "../extensions/with-root-store"
 
 /**
  * Model description here for TypeScript hints.
@@ -14,23 +16,17 @@ export const TimeRangeModel = types
     startMeridiem: types.optional(types.enumeration(["AM", "PM"]), "AM"),
     endMeridiem: types.optional(types.enumeration(["AM", "PM"]), "PM"),
   })
+  .extend(withEnvironment)
+  .extend(withRootStore)
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions((self) => ({
-    updateParentFreeTimeText() {
-      if (hasParent(self)) {
-        const parent = getParent(self, 1) as CalendarStore
-        parent.updateFreeTimeText()
-      }
-    },
-  }))
   .actions((self) => ({
     setValue(value: number, field: TimeRangeField) {
       self[field] = value
-      self.updateParentFreeTimeText()
+      self.rootStore.calendarStore.getFreeBusy()
     },
     setMeridiem(value: TimeRangeMeridiem, field: TimeRangeMeridiemField) {
       self[field] = value
-      self.updateParentFreeTimeText()
+      self.rootStore.calendarStore.getFreeBusy()
     },
   }))
 

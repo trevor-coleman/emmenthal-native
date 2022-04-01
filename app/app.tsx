@@ -20,7 +20,7 @@ import { RootStore, RootStoreProvider, setupRootStore } from "./models"
 import { ToggleStorybook } from "../storybook/toggle-storybook"
 import { ErrorBoundary } from "./screens/error/error-boundary"
 import * as eva from "@eva-design/eva"
-import { ApplicationProvider, Layout, Text } from "@ui-kitten/components"
+import { ApplicationProvider } from "@ui-kitten/components"
 
 // This puts screens in a native ViewController or Activity. If you want fully native
 // stack navigation, use `createNativeStackNavigator` in place of `createStackNavigator`:

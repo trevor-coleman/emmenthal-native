@@ -2,13 +2,14 @@ import { ApisauceInstance, create, ApiResponse } from "apisauce"
 import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import {
+  ApiUserType,
   GetCalendarsResult,
   GetFreeBusyParams,
   GetFreeBusyResult,
   GetUserInfoResult,
   ValidateTokenResult,
 } from "./api.types"
-import { calendar_v3 as GoogleCalendarApi, oauth2_v2 as GoogleOAuth } from "googleapis"
+import { calendar_v3 as GoogleCalendarApi } from "googleapis"
 
 /**
  * Manages all requests to the API.
@@ -79,12 +80,8 @@ export class Api {
   }
 
   async validateToken(token: string): Promise<ValidateTokenResult> {
-    const response = await this.apisauce.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo`, {
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    })
-
+    this.apisauce.setHeader("Authorization", `Bearer ${token}`)
+    const response = await this.apisauce.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo`)
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
@@ -116,12 +113,15 @@ export class Api {
   }
 
   async getUserInfo(): Promise<GetUserInfoResult> {
-    const response = await this.apisauce.get<any>(`/oauth2/v3/userinfo`)
+    const response = await this.apisauce.get<ApiUserType>(`/oauth2/v3/userinfo`)
 
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
     }
-    return response.data
+    return {
+      kind: "ok",
+      userInfo: response.data,
+    }
   }
 }

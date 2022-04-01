@@ -50,25 +50,23 @@ const ERROR: TextStyle = {
   color: color.error,
 }
 
+const formatMinutes = (minutes: string | number): string => {
+  minutes = typeof minutes === "string" ? parseInt(minutes) : minutes
+  return minutes < 10 ? `0${minutes}` : `${minutes}`
+}
+
 /**
  * Describe your component here
  */
 export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
   const { style } = props
   const styles = Object.assign({}, CONTAINER, style)
-
-  console.log("THIS SHOULD BE THE ONLY LOG")
-
   const { calendarStore } = useStores()
   const { timeRange } = calendarStore
   const [startHour, setStartHour] = React.useState(timeRange.startHour.toString())
-  const [startMinute, setStartMinute] = React.useState(
-    timeRange.startMinute === 0 ? "00" : timeRange.startMinute.toString(),
-  )
+  const [startMinute, setStartMinute] = React.useState(formatMinutes(timeRange.startMinute))
   const [endHour, setEndHour] = React.useState(timeRange.endHour.toString())
-  const [endMinute, setEndMinute] = React.useState(
-    timeRange.endMinute === 0 ? "00" : timeRange.endMinute.toString(),
-  )
+  const [endMinute, setEndMinute] = React.useState(formatMinutes(timeRange.endMinute))
 
   const updateTimeValue = (nextValue: number, field: TimeRangeField) => {
     timeRange.setValue(nextValue, field)
@@ -134,6 +132,7 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
               setStartHour(timeRange.startHour.toString())
             } else {
               updateTimeValue(parseInt(startHour), "startHour")
+              console.log(startHour)
             }
           }}
         />
@@ -146,14 +145,11 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           status={isError ? "danger" : undefined}
           onChangeText={(nextValue) => setStartMinute(nextValue)}
           onBlur={() => {
-            if (startMinute === "") {
-              setStartMinute(timeRange.startMinute.toString())
-            } else {
-              if (startMinute === "0") {
-                setStartMinute("00")
-              }
-              updateTimeValue(parseInt(startMinute), "startMinute")
-            }
+            const nextValue = startMinute === "" ? timeRange.startMinute : parseInt(startMinute)
+            const minutesString = formatMinutes(nextValue)
+
+            setStartMinute(minutesString)
+            updateTimeValue(nextValue, "startMinute")
           }}
         />
         <RadioGroup
@@ -177,7 +173,7 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           onChangeText={(nextValue) => handleChange(nextValue, "endHour")}
           onBlur={() => {
             if (endHour === "") {
-              setEndHour(timeRange.endMinute.toString())
+              setEndHour(timeRange.endHour.toString())
             } else {
               updateTimeValue(parseInt(endHour), "endHour")
             }
@@ -192,14 +188,10 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           status={isError ? "danger" : undefined}
           onChangeText={(nextValue) => handleChange(nextValue, "endMinute")}
           onBlur={() => {
-            if (endMinute === "") {
-              setEndMinute(timeRange.endMinute.toString())
-            } else {
-              if (endMinute === "0") {
-                setEndMinute("00")
-              }
-              updateTimeValue(parseInt(endMinute), "endMinute")
-            }
+            const nextValue = endMinute === "" ? timeRange.endMinute : parseInt(endMinute)
+            const minutesString = formatMinutes(nextValue)
+            setEndMinute(minutesString)
+            updateTimeValue(nextValue, "endMinute")
           }}
         />
         <RadioGroup

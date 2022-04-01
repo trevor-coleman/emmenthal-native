@@ -1,10 +1,12 @@
+#!/bin/zsh
+
 if [ $# -eq 0 ]
   then
     echo "Provide commit message"
     exit 1
 fi
 
-if [$# -gt 1]
+if [ $# -gt 1 ]
   then
     echo "Too many arguments"
     exit 1
@@ -15,6 +17,8 @@ if [ -z "$1" ]
     echo "Commit message cannot be empty"
     exit 1
 fi
+
+expo build:web
 
 start_dir=$PWD;
 cp -r ./web-build/* ../emmenthal-native-deploy
