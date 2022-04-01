@@ -1,5 +1,5 @@
 {
-  "name": "EmmenthalNative",
+  "name": "emmenthal-native",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "test:e2e": "./bin/downloadExpoApp.sh && detox test --configuration ios.sim.expo",
     "build:e2e": "detox build -c ios.sim.expo",
-    "build": "expo build:web",
+    "build": "npx expo build:web",
     "ci:test:e2e": "detox test -c ios.sim.release -l verbose --cleanup",
     "ci:build:e2e": "detox build -c ios.sim.release",
     "compile": "tsc --noEmit -p . --pretty",
