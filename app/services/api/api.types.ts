@@ -1,5 +1,5 @@
 import { GeneralApiProblem, getGeneralApiProblem } from "./api-problem"
-import { calendar_v3 as googleCalendar } from "googleapis"
+import { calendar_v3 as GoogleCalendar, oauth2_v2 as GoogleOAuth } from "googleapis"
 
 export interface User {
   id: number
@@ -12,7 +12,7 @@ export type GetUserResult = { kind: "ok"; user: User } | GeneralApiProblem
 export type GetCalendarsResult =
   | {
       kind: "ok"
-      calendars: googleCalendar.Schema$CalendarListEntry[]
+      calendars: GoogleCalendar.Schema$CalendarListEntry[]
     }
   | GeneralApiProblem
 
@@ -25,7 +25,7 @@ export type ValidateTokenResult =
 
 export interface GetFreeBusySuccess {
   kind: "ok"
-  data: googleCalendar.Schema$FreeBusyResponse
+  data: GoogleCalendar.Schema$FreeBusyResponse
 }
 
 export type GetFreeBusyResult = GetFreeBusySuccess | GeneralApiProblem
@@ -35,3 +35,12 @@ export interface GetFreeBusyParams {
   timeMax: Date
   calendars: { id: string }[]
 }
+
+export type ApiUserType = GoogleOAuth.Schema$Userinfo
+
+export type GetUserInfoResult =
+  | {
+      kind: "ok"
+      userInfo: ApiUserType
+    }
+  | GeneralApiProblem

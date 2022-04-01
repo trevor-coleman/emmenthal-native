@@ -3,6 +3,7 @@ import { UserModel } from "../user/user"
 import { addSeconds } from "date-fns"
 import { withEnvironment } from "../extensions/with-environment"
 import { withRootStore } from "../extensions/with-root-store"
+import { ApiUserType } from "../../services/api"
 
 /**
  * Model description here for TypeScript hints.
@@ -30,29 +31,8 @@ export const AuthStoreModel = types
     },
   }))
   .actions((self) => ({
-    setUser(user) {
-      if (!user) {
-        console.log("No User")
-        self.user = {
-          uid: "",
-          email: "",
-          displayName: "",
-          photoURL: "",
-          emailVerified: false,
-          isAnonymous: false,
-        }
-        return
-      }
-      const { uid, email, emailVerified, displayName, isAnonymous, photoURL } = user
-
-      self.user = {
-        uid,
-        email,
-        emailVerified,
-        displayName,
-        isAnonymous,
-        photoURL,
-      }
+    setUser(user: ApiUserType) {
+      self.user = UserModel.create(user)
     },
   }))
   .actions((self) => ({
@@ -71,6 +51,12 @@ export const AuthStoreModel = types
       self.validationState = "ivalid"
       self.rootStore.calendarStore.clear()
       self.signedOut = signedOut ?? false
+    },
+    async getUserInfo() {
+      const result = await self.environment.api.getUserInfo()
+      if (result.kind === "ok") {
+        self.setUser(result.userInfo)
+      }
     },
   }))
   .actions((self) => ({

@@ -1,35 +1,14 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app"
 import env from "../../config/env"
-import { getAuth } from "firebase/auth"
 import React from "react"
 import * as Google from "expo-auth-session/providers/google"
-import * as AuthSession from "expo-auth-session"
 import { useStores } from "../../models"
-import { GoogleAuth } from "google-auth-library"
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: env.FIREBASE_API_KEY,
-  authDomain: env.FIREBASE_AUTH_DOMAIN,
-  projectId: env.FIREBASE_PROJECT_ID,
-  storageBucket: env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: env.FIREBASE_APP_ID,
-}
 
 const SCOPES = [
   "https://www.googleapis.com/auth/calendar.readonly",
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",
 ]
-
-export const fb = initializeApp(firebaseConfig)
-export const auth = getAuth(fb)
-
-export function initialize() {
-  return fb
-}
 
 export function useGoogleSignIn() {
   const { authStore, calendarStore } = useStores()
@@ -43,12 +22,7 @@ export function useGoogleSignIn() {
     console.log("useGoogleSignIn.useEffect")
     if (response?.type === "success") {
       authStore.handleSignInResponse(response)
-
-      console.log(auth)
-
-      const user = auth.currentUser
-      authStore.setUser(user)
-
+      authStore.getUserInfo()
       calendarStore.getCalendars()
       calendarStore.getFreeBusy()
     }

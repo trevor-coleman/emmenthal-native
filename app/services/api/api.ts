@@ -5,9 +5,10 @@ import {
   GetCalendarsResult,
   GetFreeBusyParams,
   GetFreeBusyResult,
+  GetUserInfoResult,
   ValidateTokenResult,
 } from "./api.types"
-import { calendar_v3 as GoogleCalendarApi } from "googleapis"
+import { calendar_v3 as GoogleCalendarApi, oauth2_v2 as GoogleOAuth } from "googleapis"
 
 /**
  * Manages all requests to the API.
@@ -114,5 +115,16 @@ export class Api {
     }
 
     return { kind: "ok", data: response.data }
+  }
+
+  async getUserInfo(): Promise<GetUserInfoResult> {
+    console.log("getting user info")
+    const response = await this.apisauce.get<any>(`/oauth2/v3/userinfo`)
+
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    return response.data
   }
 }
