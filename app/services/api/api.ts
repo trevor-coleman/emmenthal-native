@@ -1,54 +1,13 @@
-import {ApisauceInstance, create} from "apisauce"
-import {ApiConfig, DEFAULT_API_CONFIG} from "./api-config"
-import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios"
-import {calendar_v3} from "googleapis"
-
-import {store} from "../../models";
-
-
-export interface IAuthContext {
-  authUrl?: string
-  authenticated: boolean
-  user: any
-}
-
-
-interface ApiResponse {
-  result: "success" | "fail"
-}
-
-interface IValidateTokenSuccess extends ApiResponse {
-  result: "success",
-  contents: GoogleApiOAuth2TokenObject
-}
-
-interface IValidateTokenFailure extends ApiResponse {
-  result: "fail"
-}
-
-export type ValidateTokenResponse = IValidateTokenSuccess | IValidateTokenFailure
-
-export interface GetFreeBusySuccess extends ApiResponse {
-  result: "success",
-  data: calendar_v3.Schema$FreeBusyResponse
-}
-
-interface GetFreeBusyFailure extends ApiResponse {
-  result: "fail"
-}
-
-export type GetFreeBusyResponse = GetFreeBusySuccess | GetFreeBusyFailure;
-
-export interface GetCalendarsSuccess extends ApiResponse {
-  result: "success",
-  data: calendar_v3.Schema$CalendarList
-}
-
-interface GetCalendarsFailure extends ApiResponse {
-  result: "fail"
-}
-
-export type GetCalendarsResponse = GetCalendarsSuccess | GetCalendarsFailure;
+import { ApisauceInstance, create, ApiResponse } from "apisauce"
+import { getGeneralApiProblem } from "./api-problem"
+import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
+import {
+  GetCalendarsResult,
+  GetFreeBusyParams,
+  GetFreeBusyResult,
+  ValidateTokenResult,
+} from "./api.types"
+import { calendar_v3 as GoogleCalendarApi } from "googleapis"
 
 /**
  * Manages all requests to the API.
@@ -57,13 +16,14 @@ export class Api {
   /**
    * The underlying apisauce instance which performs the requests.
    */
-  axios: AxiosInstance
+  apisauce: ApisauceInstance
 
   /**
    * Configurable options.
    */
   config: ApiConfig
-  token: string
+
+  authorized: boolean
 
   /**
    * Creates the api.
@@ -74,97 +34,85 @@ export class Api {
     this.config = config
   }
 
-
+  /**
+   * Sets up the API.  This will be called during the bootup
+   * sequence and will happen before the first React component
+   * is mounted.
+   *
+   * Be as quick as possible in here.
+   */
   setup() {
-
+    // construct the apisauce instance
+    this.apisauce = create({
+      baseURL: this.config.url,
+      timeout: this.config.timeout,
+      headers: {
+        Accept: "application/json",
+      },
+    })
   }
 
-  async getCalendars(): Promise<GetCalendarsResponse> {
-    try {
-      const res = await axios.get("calendar/v3/users/me/calendarList", {
-        baseURL:"https://www.googleapis.com",
-        headers: {
-          Authorization: "Bearer " + this.token,
-        },
-      })
-      return {
-        result: "success",
-        data: res.data
-      }
-    } catch (e) {
-      console.error(e)
-      return {
-        result: 'fail'
-      }
+  authorize(token: string) {
+    console.log("authorizing with token", token)
+    this.apisauce.setHeader("Authorization", `Bearer ${token}`)
+    this.authorized = true
+  }
+
+  unauthorize() {
+    console.log("unauthorizing")
+    this.apisauce.setHeader("Authorization", "")
+    this.authorized = false
+  }
+
+  /**
+   *  Gets the list of calendars.
+   */
+  async getCalendars(): Promise<GetCalendarsResult> {
+    const response: ApiResponse<GoogleCalendarApi.Schema$CalendarList> = await this.apisauce.get(
+      "calendar/v3/users/me/calendarList",
+    )
+
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
     }
+    return { kind: "ok", calendars: response.data.items }
   }
 
-  setToken(token: string) {
-    this.token = token
-  }
+  async validateToken(token: string): Promise<ValidateTokenResult> {
+    const response = await this.apisauce.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo`, {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    })
 
-  clearToken() {
-    this.token = ""
-  }
-
-  async validateToken(token): Promise<ValidateTokenResponse> {
-    try {
-      const response = await axios.get<GoogleApiOAuth2TokenObject>(`/oauth2/v3/tokeninfo`, {
-        baseURL:"https://www.googleapis.com",
-        headers: {
-          Authorization: "Bearer " + this.token,
-        },
-      })
-
-      if (response.status === 200) {
-        return {
-          result: "success",
-          contents: response.data
-        }
-      } else {
-        return {
-          result: "fail"
-        }
-      }
-
-    } catch (e) {
-      console.error(e);
-      return {result: "fail"};
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
     }
 
+    return { kind: "ok", contents: response.data }
   }
 
   async getFreeBusy({
-                      timeMin,
-                      timeMax,
-                      calendars,
-                    }: {
-    timeMin: Date
-    timeMax: Date
-    calendars: { id: string }[]
-  }): Promise<GetFreeBusyResponse> {
-    try {
-      const response = await axios.post<calendar_v3.Schema$FreeBusyRequest,
-          AxiosResponse<calendar_v3.Schema$FreeBusyResponse>>(
-          "/calendar/v3/freeBusy",
-          {timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), items: calendars},
-          {
-            baseURL:"https://www.googleapis.com",
-            headers: {
-              Authorization: "Bearer " + this.token,
-            },
-          },
-      )
+    timeMin,
+    timeMax,
+    calendars,
+  }: GetFreeBusyParams): Promise<GetFreeBusyResult> {
+    const response = await this.apisauce.post<GoogleCalendarApi.Schema$FreeBusyResponse>(
+      "/calendar/v3/freeBusy",
+      {
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString(),
+        items: calendars,
+      },
+    )
 
-      return {
-        result: "success",
-        data: response.data
-      }
-    } catch (e) {
-      console.error(e)
-      return {result: "fail"}
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
     }
+
+    return { kind: "ok", data: response.data }
   }
 }
-
-export const api = new Api();

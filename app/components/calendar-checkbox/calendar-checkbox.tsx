@@ -7,8 +7,8 @@ import { useStores } from "../../models"
 
 const CONTAINER: ViewStyle = {
   justifyContent: "center",
-  maxWidth:"100%",
-  overflow:"hidden",
+  maxWidth: "100%",
+  overflow: "hidden",
 }
 
 const TEXT: TextStyle = {
@@ -39,7 +39,7 @@ export const CalendarCheckbox = observer(function CalendarCheckbox(props: Calend
   return (
     <ListItem>
       <CheckBox
-          style={styles}
+        style={styles}
         checked={checked}
         onChange={(nextChecked) => calendarStore.setCalendarSelected(id, nextChecked)}
       >

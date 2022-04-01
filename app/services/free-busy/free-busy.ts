@@ -43,8 +43,6 @@ export function findFreeTime(
     end: timeOptions?.end ?? set(new Date(0), { hours: 20, minutes: 0 }),
   }
 
-  console.log({ timeOptions, timeRange })
-
   function endOfTimeRange(date: Date | number) {
     return setTime(new Date(date), timeRange.end)
   }
@@ -83,14 +81,14 @@ export function findFreeTime(
 
   const startDate = customDate ?? addDays(new Date(), 1)
 
-  let periodOfInterest: Interval = {
+  const periodOfInterest: Interval = {
     start: startDate,
     end: addDays(startDate, daysForward ?? 7),
   }
 
   let day = getDayRange(periodOfInterest, timeRange)
 
-  let currentBusyPeriod: Interval = { start: day.start, end: day.start }
+  const currentBusyPeriod: Interval = { start: day.start, end: day.start }
 
   const freeTimes: Interval[] = []
 
@@ -98,13 +96,15 @@ export function findFreeTime(
    * This is the core loop -- it iterates over the events in the calendar, and merges them into a single array of free times.
    */
   while (calendarEvent) {
+    console.log(calendarEvent)
+
     let { start, end } = calendarEvent
 
-    let eventCrossesMidnight = getDay(start) !== getDay(end)
+    const eventCrossesMidnight = getDay(start) !== getDay(end)
 
     if (eventCrossesMidnight) {
-      //split into two events
-      queue.unshift({ start: startOfDay(end), end })
+      // split into two events
+      queue.unshift({ start: startOfDay(addDays(start, 1)), end })
       end = endOfDay(start)
     }
 
@@ -215,9 +215,9 @@ export function findFreeTime(
           start: currentBusyPeriod.start,
           end: setTime(currentBusyPeriod.start, timeRange.end),
         })
-      } else {
       }
     }
+
     return freeTimes
   }
 

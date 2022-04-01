@@ -3,7 +3,7 @@ import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
 import { observer } from "mobx-react-lite"
 import { color, spacing, typography } from "../../theme"
 import { Text } from "../text/text"
-import { Button, ButtonGroup, Input, Radio, RadioGroup } from "@ui-kitten/components"
+import { Input, Radio, RadioGroup } from "@ui-kitten/components"
 import { TimeRangeField, TimeRangeMeridiem, TimeRangeMeridiemField, useStores } from "../../models"
 import { isBefore } from "date-fns"
 
@@ -126,6 +126,8 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           onBlur={() => {
             if (startHour === "") {
               setStartHour(timeRange.startHour.toString())
+            } else {
+              updateTimeValue(parseInt(startHour), "startHour")
             }
           }}
         />
@@ -167,6 +169,8 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           onBlur={() => {
             if (endHour === "") {
               setEndHour(timeRange.endMinute.toString())
+            } else {
+              updateTimeValue(parseInt(endHour), "endHour")
             }
           }}
         />

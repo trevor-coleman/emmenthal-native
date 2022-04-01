@@ -1,9 +1,11 @@
 import { Instance, SnapshotOut, types } from "mobx-state-tree"
 import { CalendarModel } from "../calendar/calendar"
-import { api, GetFreeBusyResponse, GetFreeBusySuccess } from "../../services/api"
 import { DaysTuple, findFreeTime, formatFreeTimeText } from "../../services/free-busy/free-busy"
 import { addDays, set } from "date-fns"
 import { TimeRangeModel } from "../time-range/time-range"
+import { GetFreeBusyResult } from "../../services/api"
+import { withEnvironment } from "../extensions/with-environment"
+import { withRootStore } from "../extensions/with-root-store"
 
 /**
  * Model description here for TypeScript hints.
@@ -34,7 +36,8 @@ export const CalendarStoreModel = types
       endMeridiem: "PM",
     }),
   })
-
+  .extend(withEnvironment)
+  .extend(withRootStore)
   .views((self) => ({
     get calendarNames(): string[] {
       const result = []
@@ -88,9 +91,16 @@ export const CalendarStoreModel = types
     },
   }))
   .actions((self) => ({
+    clear() {
+      self.calendars.clear()
+      self.selectedIds.replace([])
+      self.startDate = addDays(new Date(), 1)
+      self.daysForward = 7
+      self.freeTimeText = "Sign In To Get Started"
+    },
     handleGetCalendarResponse(response): void {
-      const calendars = response?.data?.items
-      if (!calendars) return
+      const { calendars } = response
+      self.calendars.clear()
       calendars.forEach((calendar) => {
         self.calendars.set(calendar.id, calendar)
       })
@@ -108,6 +118,7 @@ export const CalendarStoreModel = types
         selectedCalendars[calendar.id] = calendar
       })
 
+      console.log("startDate", self.startDate, self.daysForward)
       const freeTimes = findFreeTime(selectedCalendars, {
         date: {
           customDate: self.startDate,
@@ -123,12 +134,19 @@ export const CalendarStoreModel = types
     },
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => ({
-    async handleGetFreeBusyResponse(response: GetFreeBusySuccess) {
+    async handleGetFreeBusyResponse(response: GetFreeBusyResult) {
+      if (response.kind !== "ok") return
       const { calendars } = response.data
 
       if (!calendars) return
       Object.entries(calendars).forEach(([id, { busy }]) => {
-        const calendar = self.calendars.get(id)
+        let calendar = self.calendars.get(id)
+        if (!calendar) {
+          self.calendars[id] = CalendarModel.create({
+            id,
+          })
+          calendar = self.calendars.get(id)
+        }
         calendar.setBusy(busy)
       })
       self.updateFreeTimeText()
@@ -136,31 +154,32 @@ export const CalendarStoreModel = types
   }))
   .actions((self) => ({
     async getCalendars(): Promise<void> {
-      const response = await api.getCalendars()
+      if (self.rootStore.authStore.validationState === "init") {
+        await self.rootStore.authStore.validateToken()
+      }
+      if (self.rootStore.authStore.validationState === "invalid") {
+        self.clear()
+        return
+      }
+      const response = await self.environment.api.getCalendars()
       console.log(response)
       self.handleGetCalendarResponse(response)
     },
     async getFreeBusy(): Promise<void> {
-      const response: GetFreeBusyResponse = await api.getFreeBusy({
+      const response: GetFreeBusyResult = await self.environment.api.getFreeBusy({
         timeMin: self.startDate,
         timeMax: addDays(self.startDate, self.daysForward),
-        calendars: self.calendarIds,
+        calendars: self.selectedIds.map((id) => ({ id })),
       })
-      if (response.result === "success") {
-        self.handleGetFreeBusyResponse(response)
-      }
-    },
-    signOut() {
-      console.log("signOut")
-      self.calendars.clear()
-      self.selectedIds.replace([])
-      self.freeTimeText = ""
+      self.handleGetFreeBusyResponse(response)
     },
   }))
   .actions((self) => ({
     setDaysForward(daysForward: number) {
       self.daysForward = daysForward
-      self.getFreeBusy()
+      if (self.environment.api.authorized) {
+        self.getFreeBusy()
+      }
     },
     setCalendarSelected(target: string, selected: boolean) {
       self.selectedIds.replace(self.selectedIds.filter((id) => id !== target))

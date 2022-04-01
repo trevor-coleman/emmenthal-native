@@ -1,4 +1,3 @@
-
 /**
  * The options used to configure the API.
  */
@@ -18,6 +17,6 @@ export interface ApiConfig {
  * The default configuration for the app.
  */
 export const DEFAULT_API_CONFIG: ApiConfig = {
-  url: "https://us-central1-emmenthal.cloudfunctions.net",
+  url: "https://www.googleapis.com",
   timeout: 90000,
 }

@@ -1,93 +1,113 @@
-import {Instance, SnapshotOut, types, flow} from "mobx-state-tree"
-import {UserModel} from "../user/user"
-import {api} from "../../services/api"
-import {addSeconds} from "date-fns";
+import { Instance, SnapshotOut, types } from "mobx-state-tree"
+import { UserModel } from "../user/user"
+import { addSeconds } from "date-fns"
+import { withEnvironment } from "../extensions/with-environment"
+import { withRootStore } from "../extensions/with-root-store"
 
 /**
  * Model description here for TypeScript hints.
  */
 export const AuthStoreModel = types
-    .model("AuthStore")
-    .props({
-      authenticated: false,
-      lastLoginAttempt: types.maybe(types.string),
-      user: types.maybe(UserModel),
-      token: types.optional(types.string, ""),
-      tokenExpires: types.maybe(types.Date),
-      validationState: types.optional(types.enumeration("ValidationState", ["pending", "valid", "invalid", "init"]), "init")
-    })
-
-    .actions((self) => ({
-      signOut() {
-        self.token = "";
-        self.validationState = "init";
-        api.setToken("");
-        self.user = undefined;
-      },
-      setUser(user) {
-
-
-
-        const {
-          uid,
-          email,
-          emailVerified,
-          displayName,
-          isAnonymous,
-          photoURL,
-        } = user;
-
-
-        self.user = {
-          uid,
-          email,
-          emailVerified,
-          displayName,
-          isAnonymous,
-          photoURL,
-        };
+  .model("AuthStore")
+  .props({
+    signedOut: false,
+    lastLoginAttempt: types.maybe(types.string),
+    user: types.maybe(UserModel),
+    token: types.optional(types.string, ""),
+    tokenExpires: types.maybe(types.Date),
+  })
+  .volatile(() => ({
+    validationState: "init",
+  }))
+  .extend(withEnvironment)
+  .extend(withRootStore)
+  .views((self) => ({
+    get shouldSignIn() {
+      if (self.signedOut || self.validationState === "pending") {
+        return false
       }
-    }))
-    .actions((self) => ({
-      validateToken: flow(function* validateToken() {
-        self.validationState = "pending"
-        const response = yield api.validateToken(self.token)
-        if (response.result === "success") {
-          const {contents} = response;
-          self.tokenExpires = addSeconds(new Date(), parseInt(contents.expires_in));
-          api.token = self.token;
-          self.validationState = "valid"
-        } else {
-          api.token = "";
-          self.signOut();
-          self.validationState = "invalid"
+      return true
+    },
+  }))
+  .actions((self) => ({
+    setUser(user) {
+      if (!user) {
+        console.log("No User")
+        self.user = {
+          uid: "",
+          email: "",
+          displayName: "",
+          photoURL: "",
+          emailVerified: false,
+          isAnonymous: false,
         }
-      })
-    }))
-    .actions((self) => ({
-      handleSignInResponse(response) {
+        return
+      }
+      const { uid, email, emailVerified, displayName, isAnonymous, photoURL } = user
 
-        if (response.type === "success") {
-          const {authentication} = response
-          self.token = authentication.accessToken
-          api.setToken(authentication.accessToken)
-        } else {
-          self.signOut();
-        }
-      },
-    }))
+      self.user = {
+        uid,
+        email,
+        emailVerified,
+        displayName,
+        isAnonymous,
+        photoURL,
+      }
+    },
+  }))
+  .actions((self) => ({
+    authorize(token: string, expiresIn: number) {
+      self.tokenExpires = addSeconds(new Date(), expiresIn)
+      self.environment.api.authorize(token)
+      self.validationState = "valid"
+      self.rootStore.calendarStore.getCalendars()
+      self.rootStore.calendarStore.getFreeBusy()
+      self.signedOut = false
+    },
+    unauthorize(signedOut?: boolean) {
+      self.token = ""
+      self.user = undefined
+      self.environment.api.unauthorize()
+      self.validationState = "ivalid"
+      self.rootStore.calendarStore.clear()
+      self.signedOut = signedOut ?? false
+    },
+  }))
+  .actions((self) => ({
+    handleSignInResponse(response) {
+      if (response.type === "success") {
+        const {
+          authentication: { accessToken, expiresIn },
+        } = response
+        self.authorize(accessToken, parseInt(expiresIn))
+      } else {
+        self.unauthorize()
+      }
+    },
+    async validateToken() {
+      self.validationState = "pending"
+      console.log("validateToken()")
+      const response = await self.environment.api.validateToken(self.token)
 
+      if (response.kind === "ok") {
+        console.log("tokenValid")
+        const {
+          contents: { access_token: accessToken, expires_in: expiresIn },
+        } = response
+        self.authorize(accessToken, parseInt(expiresIn))
+        return
+      }
+      console.log("tokenInvalid")
+      self.unauthorize()
+    },
+  }))
 
 type AuthStoreType = Instance<typeof AuthStoreModel>
 
-export interface AuthStore extends AuthStoreType {
-}
+export interface AuthStore extends AuthStoreType {}
 
 type AuthStoreSnapshotType = SnapshotOut<typeof AuthStoreModel>
 
-export interface AuthStoreSnapshot extends AuthStoreSnapshotType {
-}
+export interface AuthStoreSnapshot extends AuthStoreSnapshotType {}
 
 export const createAuthStoreDefaultModel = () => types.optional(AuthStoreModel, {})
-
-

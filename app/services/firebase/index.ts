@@ -1,12 +1,12 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
 import env from "../../config/env"
-import "firebase/auth"
-import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup } from "firebase/auth"
+import { getAuth } from "firebase/auth"
 import React from "react"
 import * as Google from "expo-auth-session/providers/google"
-import { api } from "../api"
+import * as AuthSession from "expo-auth-session"
 import { useStores } from "../../models"
+import { GoogleAuth } from "google-auth-library"
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -31,7 +31,6 @@ export function initialize() {
   return fb
 }
 
-
 export function useGoogleSignIn() {
   const { authStore, calendarStore } = useStores()
 
@@ -40,24 +39,20 @@ export function useGoogleSignIn() {
     scopes: SCOPES,
   })
 
-
   React.useEffect(() => {
+    console.log("useGoogleSignIn.useEffect")
     if (response?.type === "success") {
       authStore.handleSignInResponse(response)
 
-      const user = auth.currentUser;
-      authStore.setUser(user);
+      console.log(auth)
 
-      calendarStore.getCalendars();
+      const user = auth.currentUser
+      authStore.setUser(user)
+
+      calendarStore.getCalendars()
       calendarStore.getFreeBusy()
-
     }
-
-
   }, [response])
 
   return { request, response, promptAsync }
 }
-
-
-
