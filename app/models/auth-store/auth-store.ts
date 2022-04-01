@@ -36,14 +36,15 @@ export const AuthStoreModel = types
     },
   }))
   .actions((self) => ({
-    authorize(token: string, expiresIn: number) {
+    async authorize(token: string, expiresIn: number) {
       self.tokenExpires = addSeconds(new Date(), expiresIn)
       self.environment.api.authorize(token)
       self.validationState = "valid"
-      self.rootStore.calendarStore.getCalendars()
-      self.rootStore.calendarStore.getFreeBusy()
       self.signedOut = false
       self.token = token
+      await self.rootStore.calendarStore.getCalendars()
+      await self.rootStore.calendarStore.getFreeBusy()
+      self.rootStore.calendarStore.updateFreeTimeText()
     },
     unauthorize(signedOut?: boolean) {
       self.token = ""
@@ -52,6 +53,7 @@ export const AuthStoreModel = types
       self.validationState = "ivalid"
       self.rootStore.calendarStore.clear()
       self.signedOut = signedOut ?? false
+      self.rootStore.calendarStore.updateFreeTimeText()
     },
     async getUserInfo() {
       const result = await self.environment.api.getUserInfo()

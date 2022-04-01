@@ -92,7 +92,6 @@ export const CalendarStoreModel = types
       self.selectedIds.replace([])
       self.startDate = addDays(new Date(), 1)
       self.daysForward = 7
-      self.freeTimeText = "Sign In To Get Started"
     },
     handleGetCalendarResponse(response): void {
       const { calendars } = response
@@ -103,6 +102,11 @@ export const CalendarStoreModel = types
     },
     updateFreeTimeText() {
       const selectedCalendars = {}
+
+      if (self.rootStore.authStore.validationState === "invalid") {
+        self.freeTimeText = "Sign in to see your free time"
+        return
+      }
 
       if (self.selectedIds.length === 0) {
         self.freeTimeText = "Select a Calendar"
