@@ -57,6 +57,8 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
   const { style } = props
   const styles = Object.assign({}, CONTAINER, style)
 
+  console.log("THIS SHOULD BE THE ONLY LOG")
+
   const { calendarStore } = useStores()
   const { timeRange } = calendarStore
   const [startHour, setStartHour] = React.useState(timeRange.startHour.toString())
