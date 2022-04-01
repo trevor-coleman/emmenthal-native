@@ -168,7 +168,6 @@ export class Reactotron {
         handler: (args) => {
           const { route } = args
           if (route) {
-            console.log(`Navigating to: ${route}`)
             navigate(route)
           } else {
             console.log("Could not navigate. No route provided.")

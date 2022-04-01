@@ -19,7 +19,6 @@ export function useGoogleSignIn() {
   })
 
   React.useEffect(() => {
-    console.log("useGoogleSignIn.useEffect")
     if (response?.type === "success") {
       authStore.handleSignInResponse(response)
       authStore.getUserInfo()

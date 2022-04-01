@@ -72,18 +72,16 @@ export const AuthStoreModel = types
     },
     async validateToken() {
       self.validationState = "pending"
-      console.log("validateToken()")
+
       const response = await self.environment.api.validateToken(self.token)
 
       if (response.kind === "ok") {
-        console.log("tokenValid")
         const {
           contents: { access_token: accessToken, expires_in: expiresIn },
         } = response
         self.authorize(accessToken, parseInt(expiresIn))
         return
       }
-      console.log("tokenInvalid")
       self.unauthorize()
     },
   }))

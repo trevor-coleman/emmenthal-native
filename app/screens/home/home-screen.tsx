@@ -52,25 +52,19 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
     }, [request])
 
     const handleInvalid = () => {
-      console.log("handleInvalid")
       authStore.unauthorize()
     }
 
     useEffect(() => {
-      console.log("HomeScreen.useEffect")
       switch (authStore.validationState) {
         case "valid":
-          console.log("VALID")
           break
         case "invalid":
-          console.log("INVALID")
           handleInvalid()
           break
         case "pending":
-          console.log("PENDING")
           break
         default:
-          console.log("DEFAULT")
           handleInit()
           break
       }

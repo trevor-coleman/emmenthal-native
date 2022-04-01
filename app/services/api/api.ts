@@ -54,13 +54,11 @@ export class Api {
   }
 
   authorize(token: string) {
-    console.log("authorizing with token", token)
     this.apisauce.setHeader("Authorization", `Bearer ${token}`)
     this.authorized = true
   }
 
   unauthorize() {
-    console.log("unauthorizing")
     this.apisauce.setHeader("Authorization", "")
     this.authorized = false
   }
@@ -118,7 +116,6 @@ export class Api {
   }
 
   async getUserInfo(): Promise<GetUserInfoResult> {
-    console.log("getting user info")
     const response = await this.apisauce.get<any>(`/oauth2/v3/userinfo`)
 
     if (!response.ok) {

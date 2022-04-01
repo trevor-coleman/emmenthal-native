@@ -192,7 +192,6 @@ export const TimeRange = observer(function TimeRange(props: TimeRangeProps) {
           style={MERIDIEM_RADIO_GROUP}
           selectedIndex={timeRange.endMeridiem === "AM" ? 0 : 1}
           onChange={(index) => {
-            console.log("index", index)
             updateMeridiem(index === 0 ? "AM" : "PM", "endMeridiem")
           }}
         >

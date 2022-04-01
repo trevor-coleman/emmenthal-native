@@ -96,8 +96,6 @@ export function findFreeTime(
    * This is the core loop -- it iterates over the events in the calendar, and merges them into a single array of free times.
    */
   while (calendarEvent) {
-    console.log(calendarEvent)
-
     let { start, end } = calendarEvent
 
     const eventCrossesMidnight = getDay(start) !== getDay(end)

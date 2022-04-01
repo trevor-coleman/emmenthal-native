@@ -69,8 +69,6 @@ export const CalendarStoreModel = types
         endMeridiem,
       } = self.timeRange
 
-      console.log({ endHour, endMeridiem, endMinute })
-
       const start = {
         hours: startMeridiem === "AM" ? startHour : startHour + 12,
         minutes: startMinute,
@@ -80,8 +78,6 @@ export const CalendarStoreModel = types
         hours: endMeridiem === "AM" ? endHour : endHour + 12,
         minutes: endMinute,
       }
-
-      console.log({ start, end })
 
       return {
         start: set(new Date(0), start),
@@ -118,7 +114,6 @@ export const CalendarStoreModel = types
         selectedCalendars[calendar.id] = calendar
       })
 
-      console.log("startDate", self.startDate, self.daysForward)
       const freeTimes = findFreeTime(selectedCalendars, {
         date: {
           customDate: self.startDate,
@@ -127,9 +122,6 @@ export const CalendarStoreModel = types
         },
         time: self.timeRangeInfo,
       })
-
-      console.log({ freeTimes })
-
       self.freeTimeText = formatFreeTimeText(freeTimes)
     },
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -162,7 +154,6 @@ export const CalendarStoreModel = types
         return
       }
       const response = await self.environment.api.getCalendars()
-      console.log(response)
       self.handleGetCalendarResponse(response)
     },
     async getFreeBusy(): Promise<void> {
