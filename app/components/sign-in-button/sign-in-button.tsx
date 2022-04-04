@@ -24,7 +24,24 @@ const SIGN_OUT_BUTTON: ViewStyle = {
   ...GOOGLE_BUTTON_IMAGE,
 }
 
-const USER_INFO: ViewStyle = { height: 46, width: 250 }
+const USER_INFO_SIZE: ViewStyle = {
+  height: 46,
+  width: 250,
+}
+
+const USER_INFO: ViewStyle = {
+  ...USER_INFO_SIZE,
+  backgroundColor: "#fff",
+  padding: spacing[2],
+  shadowOffset: {
+    width: 2,
+    height: 2,
+  },
+  shadowRadius: 6,
+  shadowOpacity: 0.25,
+  shadowColor: "#000",
+  borderRadius: 5,
+}
 export interface SignInButtonProps {
   /**
    * An optional style override useful for padding & margin.
@@ -48,7 +65,7 @@ export const SignInButton = observer(function SignInButton(props: SignInButtonPr
 
   return authStore.validationState !== "valid" ? (
     <View style={CONTAINER}>
-      <View style={USER_INFO} />
+      <View style={USER_INFO_SIZE} />
       <Pressable onPress={handleSignIn} disabled={disabled}>
         {({ pressed }) =>
           pressed ? (

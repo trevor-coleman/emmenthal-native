@@ -39,7 +39,11 @@ const AppStack = () => {
       }}
       initialRouteName="home"
     >
-      <Stack.Screen name="home" component={HomeScreen} />
+      <Stack.Screen
+        name="home"
+        component={HomeScreen}
+        options={{ title: "Emmenthal - Find holes in your schedule" }}
+      />
       <Stack.Screen name="privacyPolicy" component={PrivacyPolicyScreen} />
     </Stack.Navigator>
   )
