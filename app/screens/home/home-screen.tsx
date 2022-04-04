@@ -1,18 +1,27 @@
-import React, { FC, useEffect } from "react"
-import { observer } from "mobx-react-lite"
-import { View, ViewStyle } from "react-native"
-import { StackScreenProps } from "@react-navigation/stack"
-import { NavigatorParamList } from "../../navigators"
-import { Layout } from "@ui-kitten/components"
-import { spacing } from "../../theme"
-import * as WebBrowser from "expo-web-browser"
-import { useStores } from "../../models"
-import { CalendarList, FreeTimes, Header, Options } from "../../components"
-import { useGoogleSignIn } from "../../services/firebase"
+import { StackScreenProps } from '@react-navigation/stack';
+import { Layout } from '@ui-kitten/components';
+import * as WebBrowser from 'expo-web-browser';
+import { observer } from 'mobx-react-lite';
+import React, { FC, useEffect } from 'react';
+import { View, ViewStyle } from 'react-native';
+
+import { CalendarList, FreeTimes, Header, Options } from '../../components';
+import { useStores } from '../../models';
+import { NavigatorParamList } from '../../navigators';
+import { useGoogleSignIn } from '../../services/firebase';
+import { spacing } from '../../theme';
+
+const TOP: ViewStyle = {
+  display: "flex",
+  flexDirection: "column",
+  height: "100vh",
+  overflow: "scroll",
+}
 
 const MAIN_PANEL: ViewStyle = {
   display: "flex",
   flexDirection: "row",
+  justifyContent: "space-between",
 }
 
 const HEADER: ViewStyle = {
@@ -24,10 +33,24 @@ const HEADER: ViewStyle = {
 }
 
 const LAYOUT: ViewStyle = {
-  flex: 1,
   justifyContent: "flex-start",
-  alignItems: "flex-start",
+  alignItems: "center",
   flexDirection: "column",
+  padding: spacing[6],
+  flexGrow: 1,
+}
+
+const COLUMN: ViewStyle = {
+  width: 300,
+  marginHorizontal: spacing[4],
+  padding: spacing[2],
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 2,
+    height: 2,
+  },
+  shadowRadius: 6,
+  shadowOpacity: 0.25,
 }
 
 WebBrowser.maybeCompleteAuthSession()
@@ -71,14 +94,22 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
     }, [authStore.validationState, request])
 
     return (
-      <Layout style={LAYOUT}>
+      <View style={TOP}>
         <Header style={HEADER} />
-        <View style={MAIN_PANEL}>
-          <CalendarList />
-          <Options />
-          <FreeTimes />
-        </View>
-      </Layout>
+        <Layout style={LAYOUT}>
+          <View style={MAIN_PANEL}>
+            <View style={COLUMN}>
+              <CalendarList />
+            </View>
+            <View style={COLUMN}>
+              <Options />
+            </View>
+            <View style={COLUMN}>
+              <FreeTimes />
+            </View>
+          </View>
+        </Layout>
+      </View>
     )
   },
 )

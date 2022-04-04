@@ -1,10 +1,10 @@
-import * as React from "react"
-import { TextStyle, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { Text, ThemeType, useTheme, withStyles } from "@ui-kitten/components"
-import { SignInButton } from "../sign-in-button/sign-in-button"
-import { UserInfo } from "../user-info/user-info"
-import { spacing } from "../../theme"
+import { Text, useTheme } from '@ui-kitten/components';
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { View, ViewStyle } from 'react-native';
+
+import { spacing } from '../../theme';
+import { SignInButton } from '../sign-in-button/sign-in-button';
 
 const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
@@ -31,9 +31,8 @@ export const Header = observer(function Header(props: HeaderProps) {
   return (
     <View style={styles.container}>
       <View style={styles.headerView}>
-        <Text category={"h1"}>{"Emmenthal - Find Holes in Your Schedule"}</Text>
+        <Text category={"h2"}>{"Emmenthal - Find Holes in Your Schedule"}</Text>
       </View>
-      <UserInfo />
       <View>
         <SignInButton />
       </View>

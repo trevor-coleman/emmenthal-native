@@ -1,18 +1,18 @@
-import * as React from "react"
-import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { color, typography } from "../../theme"
-import { Text, Divider } from "@ui-kitten/components"
-import { useStores } from "../../models"
-import { CalendarCheckbox } from "../calendar-checkbox/calendar-checkbox"
+import { Divider, Text } from '@ui-kitten/components';
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
+
+import { useStores } from '../../models';
+import { color, typography } from '../../theme';
+import { CalendarCheckbox } from '../calendar-checkbox/calendar-checkbox';
 
 const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
-  alignItems:"flex-start",
-  maxWidth: 300,
-  minWidth: 200,
+  alignItems: "flex-start",
+  width: 300,
   borderRightWidth: 1,
-  borderRightColor: "#eee"
+  borderRightColor: "#eee",
 }
 
 const TEXT: TextStyle = {
@@ -39,7 +39,7 @@ export const CalendarList = observer(function CalendarList(props: CalendarListPr
   return (
     <View style={styles}>
       <Text category={"h2"}>Calendars</Text>
-      <Divider/>
+      <Divider />
       {calendarStore.calendarList.map(({ id, label }) => (
         <CalendarCheckbox key={id} id={id} label={label} />
       ))}

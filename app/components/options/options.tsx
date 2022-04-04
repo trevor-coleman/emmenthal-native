@@ -1,21 +1,17 @@
-import * as React from "react"
-import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { color, typography } from "../../theme"
+import { Text } from '@ui-kitten/components';
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
 
-import { Button, Text } from "@ui-kitten/components"
-import { DateRange } from "../date-range/date-range"
-import { TimeRange } from "../time-range/time-range"
-import { DaysOfTheWeek } from "../days-of-the-week/days-of-the-week"
+import { color, typography } from '../../theme';
+import { DateRange } from '../date-range/date-range';
+import { DaysOfTheWeek } from '../days-of-the-week/days-of-the-week';
+import { TimeRange } from '../time-range/time-range';
 
 const CONTAINER: ViewStyle = {
   justifyContent: "flex-start",
   alignItems: "flex-start",
-  minWidth: 300,
-  maxWidth: 500,
-  marginHorizontal: 20,
-  borderRightWidth: 1,
-  borderRightColor: "#eee",
+  width: 300,
 }
 
 const TEXT: TextStyle = {
@@ -31,6 +27,10 @@ export interface OptionsProps {
   style?: StyleProp<ViewStyle>
 }
 
+const OPTIONS_SECTION: ViewStyle = {
+  marginBottom: 20,
+}
+
 /**
  * Describe your component here
  */
@@ -40,12 +40,17 @@ export const Options = observer(function Options(props: OptionsProps) {
 
   return (
     <View style={styles}>
-      <Text category={"h2"}>Options</Text>
-      <DateRange />
-      <Text category={"h4"}>Time Range</Text>
-      <TimeRange />
-      <Text category={"h4"}>Days of the Week</Text>
-      <DaysOfTheWeek />
+      <View style={OPTIONS_SECTION}>
+        <DateRange />
+      </View>
+      <View style={OPTIONS_SECTION}>
+        <Text category={"h2"}>Time Range</Text>
+        <TimeRange />
+      </View>
+      <View style={OPTIONS_SECTION}>
+        <Text category={"h2"}>Days of the Week</Text>
+        <DaysOfTheWeek />
+      </View>
     </View>
   )
 })
