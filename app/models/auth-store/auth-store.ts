@@ -1,9 +1,10 @@
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { UserModel } from "../user/user"
-import { addSeconds } from "date-fns"
-import { withEnvironment } from "../extensions/with-environment"
-import { withRootStore } from "../extensions/with-root-store"
-import { ApiUserType } from "../../services/api"
+import { addSeconds } from 'date-fns';
+import { Instance, SnapshotOut, types } from 'mobx-state-tree';
+
+import { ApiUserType } from '../../services/api';
+import { withEnvironment } from '../extensions/with-environment';
+import { withRootStore } from '../extensions/with-root-store';
+import { UserModel } from '../user/user';
 
 /**
  * Model description here for TypeScript hints.
@@ -28,6 +29,9 @@ export const AuthStoreModel = types
         return false
       }
       return true
+    },
+    get isSignedIn() {
+      return self.validationState === "valid"
     },
   }))
   .actions((self) => ({

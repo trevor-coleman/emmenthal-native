@@ -1,3 +1,6 @@
+const path = require("path")
+
+const CopyPlugin = require("copy-webpack-plugin")
 const createExpoWebpackConfigAsync = require("@expo/webpack-config")
 // const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer")
 
@@ -11,6 +14,12 @@ module.exports = async function (env, argv) {
   if (config.mode === "development") {
     config.devServer.compress = false
   }
+
+  config.plugins.push(
+    new CopyPlugin({
+      patterns: [{ from: path.resolve(__dirname, "static/privacy.html") }],
+    }),
+  )
 
   // if (env.mode === "production") {
   //   config.plugins.push(

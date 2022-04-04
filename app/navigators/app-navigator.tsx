@@ -1,16 +1,17 @@
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { useColorScheme } from 'react-native';
+
+import { HomeScreen, PrivacyPolicyScreen } from '../screens';
+import { navigationRef, useBackButtonHandler } from './navigation-utilities';
+
 /**
  * The app navigator (formerly "AppNavigator" and "MainNavigator") is used for the primary
  * navigation flows of your app.
  * Generally speaking, it will contain an auth flow (registration, login, forgot password)
  * and a "main" flow which the user will use once logged in.
  */
-import React from "react"
-import { useColorScheme } from "react-native"
-import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native"
-import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import {HomeScreen} from "../screens"
-import { navigationRef, useBackButtonHandler } from "./navigation-utilities"
-
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
  * as well as what properties (if any) they might take when navigating to them.
@@ -25,6 +26,7 @@ import { navigationRef, useBackButtonHandler } from "./navigation-utilities"
  */
 export type NavigatorParamList = {
   home: undefined
+  privacyPolicy: undefined
 }
 
 const Stack = createNativeStackNavigator<NavigatorParamList>()
@@ -38,6 +40,7 @@ const AppStack = () => {
       initialRouteName="home"
     >
       <Stack.Screen name="home" component={HomeScreen} />
+      <Stack.Screen name="privacyPolicy" component={PrivacyPolicyScreen} />
     </Stack.Navigator>
   )
 }

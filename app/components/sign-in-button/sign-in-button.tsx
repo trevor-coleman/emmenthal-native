@@ -1,9 +1,10 @@
-import * as React from "react"
-import { StyleProp, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { Button } from "@ui-kitten/components"
-import { useGoogleSignIn } from "../../services/firebase"
-import { useStores } from "../../models"
+import { Button } from '@ui-kitten/components';
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { StyleProp, View, ViewStyle } from 'react-native';
+
+import { useStores } from '../../models';
+import { useGoogleSignIn } from '../../services/firebase';
 
 export interface SignInButtonProps {
   /**
