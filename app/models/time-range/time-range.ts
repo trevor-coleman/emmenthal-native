@@ -1,7 +1,11 @@
-import { Instance, SnapshotOut, types, hasParent, getParent } from "mobx-state-tree"
-import { CalendarStore } from "../calendar-store/calendar-store"
-import { withEnvironment } from "../extensions/with-environment"
-import { withRootStore } from "../extensions/with-root-store"
+import { getHours, getMinutes, set } from 'date-fns';
+import { Instance, SnapshotOut, types } from 'mobx-state-tree';
+
+import { sliderToDate } from '../../services/free-busy/time';
+import { withEnvironment } from '../extensions/with-environment';
+import { withRootStore } from '../extensions/with-root-store';
+
+let timer: NodeJS.Timeout
 
 /**
  * Model description here for TypeScript hints.
@@ -9,16 +13,41 @@ import { withRootStore } from "../extensions/with-root-store"
 export const TimeRangeModel = types
   .model("TimeRange")
   .props({
-    startHour: types.optional(types.number, 10),
-    startMinute: types.optional(types.number, 30),
-    endHour: types.optional(types.number, 6),
-    endMinute: types.optional(types.number, 0),
-    startMeridiem: types.optional(types.enumeration(["AM", "PM"]), "AM"),
-    endMeridiem: types.optional(types.enumeration(["AM", "PM"]), "PM"),
+    start: types.optional(types.Date, set(new Date(), { hours: 10, minutes: 0 })),
+    end: types.optional(types.Date, set(new Date(), { hours: 18, minutes: 0 })),
   })
   .extend(withEnvironment)
   .extend(withRootStore)
-  .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .views((self) => ({
+    toObject() {
+      const start = {
+        hours: getHours(self.start),
+        minutes: getMinutes(self.start),
+      }
+      const end = {
+        hours: getHours(self.end),
+        minutes: getMinutes(self.end),
+      }
+      return {
+        start,
+        end,
+      }
+    },
+    get sliderRange(): [number, number] {
+      const start = (getHours(self.start) + getMinutes(self.start) / 60) * 2
+      const end = (getHours(self.end) + getMinutes(self.end) / 60) * 2
+      console.log("sliderRange", [start, end])
+
+      return [start, end]
+    },
+    get timeRangeInfo() {
+      return {
+        start: self.start,
+        end: self.end,
+        duration: { hours: 1, minutes: 0 },
+      }
+    },
+  }))
   .actions((self) => ({
     setValue(value: number, field: TimeRangeField) {
       self[field] = value
@@ -27,6 +56,23 @@ export const TimeRangeModel = types
     setMeridiem(value: TimeRangeMeridiem, field: TimeRangeMeridiemField) {
       self[field] = value
       self.rootStore.calendarStore.getFreeBusy()
+    },
+    setTimeRange({ start, end }: { start: Date; end: Date }) {
+      self.start = start
+      self.end = end
+      self.rootStore.calendarStore.getFreeBusy()
+    },
+  }))
+  .actions((self) => ({
+    setFromSliderRange(range: [number, number], updateFreeBusy?: boolean) {
+      const start = sliderToDate(range[0])
+      const end = sliderToDate(range[1])
+
+      self.start = start
+      self.end = end
+      if (updateFreeBusy) {
+        self.rootStore.calendarStore.getFreeBusy()
+      }
     },
   }))
 

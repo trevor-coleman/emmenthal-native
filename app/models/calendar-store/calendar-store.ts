@@ -27,14 +27,6 @@ export const CalendarStoreModel = types
       true,
       false,
     ]),
-    timeRange: types.optional(TimeRangeModel, {
-      startHour: 10,
-      startMinute: 30,
-      endHour: 18,
-      endMinute: 30,
-      startMeridiem: "AM",
-      endMeridiem: "PM",
-    }),
   })
   .extend(withEnvironment)
   .extend(withRootStore)
@@ -59,35 +51,10 @@ export const CalendarStoreModel = types
       })
       return result
     },
-    get timeRangeInfo(): { start: Date; end: Date; duration: Duration } {
-      const {
-        startHour,
-        startMinute,
-        endHour,
-        endMinute,
-        startMeridiem,
-        endMeridiem,
-      } = self.timeRange
-
-      const start = {
-        hours: startMeridiem === "AM" ? startHour : startHour + 12,
-        minutes: startMinute,
-      }
-
-      const end = {
-        hours: endMeridiem === "AM" ? endHour : endHour + 12,
-        minutes: endMinute,
-      }
-
-      return {
-        start: set(new Date(0), start),
-        end: set(new Date(0), end),
-        duration: { hours: 1, minutes: 0 },
-      }
-    },
   }))
   .actions((self) => ({
     clear() {
+      console.log("clearing CalendarStore")
       self.calendars.clear()
       self.selectedIds.replace([])
       self.startDate = addDays(new Date(), 1)
@@ -124,7 +91,7 @@ export const CalendarStoreModel = types
           daysForward: self.daysForward,
           daysOfWeek: (self.daysOfTheWeek as unknown) as DaysTuple,
         },
-        time: self.timeRangeInfo,
+        time: self.rootStore.timeRange.timeRangeInfo,
       })
       self.freeTimeText = formatFreeTimeText(freeTimes)
     },

@@ -50,7 +50,7 @@ export const AuthStoreModel = types
       self.token = ""
       self.user = undefined
       self.environment.api.unauthorize()
-      self.validationState = "ivalid"
+      self.validationState = "invalid"
       self.rootStore.calendarStore.clear()
       self.signedOut = signedOut ?? false
       self.rootStore.calendarStore.updateFreeTimeText()
