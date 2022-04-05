@@ -1,8 +1,10 @@
-import { set } from "date-fns"
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { AuthStoreModel } from "../auth-store/auth-store"
-import { CalendarStoreModel } from "../calendar-store/calendar-store"
-import { TimeRangeModel } from "../time-range/time-range"
+import { set } from 'date-fns';
+import { Instance, SnapshotOut, types } from 'mobx-state-tree';
+
+import { AppOptionsModel } from '../app-options/app-options';
+import { AuthStoreModel } from '../auth-store/auth-store';
+import { CalendarStoreModel } from '../calendar-store/calendar-store';
+import { TimeRangeModel } from '../time-range/time-range';
 
 /**
  * A RootStore model.
@@ -15,6 +17,7 @@ export const RootStoreModel = types.model("RootStore").props({
     start: set(new Date(), { hours: 10, minutes: 0 }),
     end: set(new Date(), { hours: 18, minutes: 0 }),
   }),
+  appOptions: types.optional(AppOptionsModel, {})
 })
 
 /**

@@ -1,4 +1,4 @@
-import { Button } from '@ui-kitten/components';
+import { Button, useTheme } from '@ui-kitten/components';
 import { observer } from 'mobx-react-lite';
 import * as React from 'react';
 import { Image, ImageStyle, Pressable, StyleProp, View, ViewStyle } from 'react-native';
@@ -8,40 +8,6 @@ import { useGoogleSignIn } from '../../services/firebase';
 import { spacing } from '../../theme';
 import { UserInfo } from '../user-info/user-info';
 
-const CONTAINER: ViewStyle = {
-  marginLeft: spacing[6],
-  height: 46,
-  display: "flex",
-  flexDirection: "row",
-  width: 450,
-}
-const GOOGLE_BUTTON_IMAGE: ImageStyle = {
-  width: 191,
-  height: 46,
-}
-
-const SIGN_OUT_BUTTON: ViewStyle = {
-  ...GOOGLE_BUTTON_IMAGE,
-}
-
-const USER_INFO_SIZE: ViewStyle = {
-  height: 46,
-  width: 250,
-}
-
-const USER_INFO: ViewStyle = {
-  ...USER_INFO_SIZE,
-  backgroundColor: "#fff",
-  padding: spacing[2],
-  shadowOffset: {
-    width: 2,
-    height: 2,
-  },
-  shadowRadius: 6,
-  shadowOpacity: 0.25,
-  shadowColor: "#000",
-  borderRadius: 5,
-}
 export interface SignInButtonProps {
   /**
    * An optional style override useful for padding & margin.
@@ -56,6 +22,7 @@ export interface SignInButtonProps {
 export const SignInButton = observer(function SignInButton(props: SignInButtonProps) {
   const { authStore } = useStores()
   const { request, promptAsync } = useGoogleSignIn()
+  const styles = useStyles()
 
   const handleSignIn = async () => {
     await promptAsync()
@@ -64,18 +31,18 @@ export const SignInButton = observer(function SignInButton(props: SignInButtonPr
   const disabled = !request
 
   return authStore.validationState !== "valid" ? (
-    <View style={CONTAINER}>
-      <View style={USER_INFO_SIZE} />
+    <View style={styles.container}>
+      <View style={styles.userInfoSize} />
       <Pressable onPress={handleSignIn} disabled={disabled}>
         {({ pressed }) =>
           pressed ? (
             <Image
-              style={GOOGLE_BUTTON_IMAGE}
+              style={styles.googleButtonImage}
               source={require("./btn_google_signin_light_pressed_web@2x.png")}
             />
           ) : (
             <Image
-              style={GOOGLE_BUTTON_IMAGE}
+              style={styles.googleButtonImage}
               source={require("./btn_google_signin_light_normal_web@2x.png")}
             />
           )
@@ -83,10 +50,10 @@ export const SignInButton = observer(function SignInButton(props: SignInButtonPr
       </Pressable>
     </View>
   ) : (
-    <View style={CONTAINER}>
-      <UserInfo style={USER_INFO} />
+    <View style={styles.container}>
+      <UserInfo style={styles.userInfo} />
       <Button
-        style={SIGN_OUT_BUTTON}
+        style={styles.signOutButton}
         disabled={!request}
         onPress={async () => {
           authStore.unauthorize(true)
@@ -97,3 +64,45 @@ export const SignInButton = observer(function SignInButton(props: SignInButtonPr
     </View>
   )
 })
+
+function useStyles() {
+  const theme = useTheme()
+
+  const buttonImage = {
+    width: 191,
+    height: 46,
+  } as ImageStyle
+
+  const userInfoSize: ViewStyle = {
+    height: 46,
+    width: 250,
+  }
+
+  return {
+    container: {
+      marginLeft: spacing[6],
+      height: 46,
+      display: "flex",
+      flexDirection: "row",
+      width: 450,
+    } as ViewStyle,
+    googleButtonImage: buttonImage,
+    signOutButton: {
+      ...buttonImage,
+    } as ViewStyle,
+    userInfoSize,
+    userInfo: {
+      ...userInfoSize,
+      backgroundColor: "#fff",
+      padding: spacing[2],
+      shadowOffset: {
+        width: 2,
+        height: 2,
+      },
+      shadowRadius: 6,
+      shadowOpacity: 0.25,
+      shadowColor: "#000",
+      borderRadius: 5,
+    } as ViewStyle,
+  }
+}

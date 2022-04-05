@@ -26,12 +26,12 @@ export const FreeTimes = observer(function FreeTimes() {
   return (
     <View style={CONTAINER}>
       <View style={HEADER}>
-        <Text category={"h2"}>Free Time</Text>
+        <Text category={"h2"}>3. Copy the results</Text>
       </View>
+      <CopyToClipboardButton />
       <View>
         <Text>{freeTimes}</Text>
       </View>
-      <CopyToClipboardButton />
     </View>
   )
 })

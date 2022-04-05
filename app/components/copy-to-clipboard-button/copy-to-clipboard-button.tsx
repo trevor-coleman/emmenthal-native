@@ -20,6 +20,8 @@ export interface CopyToClipboardButtonProps {
   style?: StyleProp<ViewStyle>
 }
 
+const SUCCESS_MESSAGE = { color: "black" }
+
 /**
  * Describe your component here
  */
@@ -53,7 +55,7 @@ export const CopyToClipboardButton = observer(function CopyToClipboardButton(
       <Button disabled={busy} onPress={() => copyToClipboard()}>
         Copy To Clipboard
       </Button>
-      {copied && <Text style={{ color: "black" }}>COPIED</Text>}
+      {copied && <Text style={SUCCESS_MESSAGE}>COPIED</Text>}
     </View>
   )
 })

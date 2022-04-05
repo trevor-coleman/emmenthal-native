@@ -1,3 +1,20 @@
+import './i18n';
+import './utils/ignore-warnings';
+
+import * as eva from '@eva-design/eva';
+import { ApplicationProvider } from '@ui-kitten/components';
+import React, { useEffect, useState } from 'react';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { ToggleStorybook } from '../storybook/toggle-storybook';
+import { theme } from './emmenthal-theme';
+import mapping from './mapping.json';
+import { RootStore, RootStoreProvider, setupRootStore } from './models';
+import { AppNavigator, useNavigationPersistence } from './navigators';
+import { ErrorBoundary } from './screens/error/error-boundary';
+import { initFonts } from './theme/fonts';
+import * as storage from './utils/storage';
+
 /**
  * Welcome to the main entry point of the app. In this file, we'll
  * be kicking off our app.
@@ -9,19 +26,6 @@
  * The app navigation resides in ./app/navigators, so head over there
  * if you're interested in adding screens and navigators.
  */
-import "./i18n"
-import "./utils/ignore-warnings"
-import React, { useState, useEffect } from "react"
-import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context"
-import { initFonts } from "./theme/fonts" // expo
-import * as storage from "./utils/storage"
-import { AppNavigator, useNavigationPersistence } from "./navigators"
-import { RootStore, RootStoreProvider, setupRootStore } from "./models"
-import { ToggleStorybook } from "../storybook/toggle-storybook"
-import { ErrorBoundary } from "./screens/error/error-boundary"
-import * as eva from "@eva-design/eva"
-import { ApplicationProvider } from "@ui-kitten/components"
-
 // This puts screens in a native ViewController or Activity. If you want fully native
 // stack navigation, use `createNativeStackNavigator` in place of `createStackNavigator`:
 // https://github.com/kmagiera/react-native-screens#using-native-stack-navigator
@@ -59,7 +63,7 @@ function App() {
   return (
     <ToggleStorybook>
       <RootStoreProvider value={rootStore}>
-        <ApplicationProvider {...eva} theme={eva.light}>
+        <ApplicationProvider {...eva} theme={theme} customMapping={mapping}>
           <SafeAreaProvider initialMetrics={initialWindowMetrics}>
             <ErrorBoundary catchErrors={"always"}>
               <AppNavigator

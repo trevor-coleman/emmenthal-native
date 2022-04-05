@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import React, { FC, useEffect } from 'react';
 import { View, ViewStyle } from 'react-native';
 
-import { CalendarList, FreeTimes, Header, Options } from '../../components';
+import { CalendarList, FreeTimes, Header, Options, Summary } from '../../components';
 import { useStores } from '../../models';
 import { NavigatorParamList } from '../../navigators';
 import { useGoogleSignIn } from '../../services/firebase';
@@ -32,11 +32,17 @@ const HEADER: ViewStyle = {
   marginBottom: spacing[2],
 }
 
+const SUMMARY_PANEL: ViewStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}
+
 const LAYOUT: ViewStyle = {
   justifyContent: "flex-start",
   alignItems: "center",
   flexDirection: "column",
-  padding: spacing[6],
+  paddingTop: spacing[6],
   flexGrow: 1,
 }
 
@@ -97,6 +103,7 @@ export const HomeScreen: FC<StackScreenProps<NavigatorParamList, "home">> = obse
       <View style={TOP}>
         <Header style={HEADER} />
         <Layout style={LAYOUT}>
+          <Summary />
           <View style={MAIN_PANEL}>
             <View style={COLUMN}>
               <CalendarList />

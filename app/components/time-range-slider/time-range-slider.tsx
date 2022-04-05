@@ -1,4 +1,5 @@
 import { RangeSlider } from '@sharcoux/slider';
+import { useTheme } from '@ui-kitten/components';
 import { format } from 'date-fns';
 import { observer } from 'mobx-react-lite';
 import * as React from 'react';
@@ -15,7 +16,8 @@ const CONTAINER: ViewStyle = {
   display: "flex",
   flexDirection: "column",
   height: 60,
-  minWidth: 300,
+  minWidth: 280,
+  maxWidth: "100%",
 }
 
 const SLIDER_CONTAINER: ViewStyle = {
@@ -71,7 +73,8 @@ export interface TimeRangeSliderProps {
  */
 export const TimeRangeSlider = observer(function TimeRangeSlider(props: TimeRangeSliderProps) {
   const { style } = props
-  const styles = Object.assign({}, CONTAINER, style)
+
+  const theme = useTheme()
 
   const { timeRange, calendarStore } = useStores()
   const rangeRef = React.useRef<SliderRange>(timeRange.sliderRange)
@@ -95,6 +98,8 @@ export const TimeRangeSlider = observer(function TimeRangeSlider(props: TimeRang
             calendarStore.updateFreeTimeText()
           }}
           slideOnTap={false}
+          thumbTintColor={theme["color-primary-default"]}
+          inboundColor={theme["color-primary-focus"]}
         />
       </View>
       <View style={TIME_DISPLAY}>

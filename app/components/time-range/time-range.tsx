@@ -1,8 +1,8 @@
-import * as React from "react"
-import { StyleProp, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { TimeRangeSlider } from "../time-range-slider/time-range-slider"
-import { TimePicker } from "../time-picker/time-picker"
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { StyleProp, View, ViewStyle } from 'react-native';
+
+import { TimeRangeSlider } from '../time-range-slider/time-range-slider';
 
 const CONTAINER: ViewStyle = {
   justifyContent: "center",

@@ -38,7 +38,7 @@ export const CalendarList = observer(function CalendarList(props: CalendarListPr
 
   return (
     <View style={styles}>
-      <Text category={"h2"}>Calendars</Text>
+      <Text category={"h2"}>1. Select Calendars</Text>
       <Divider />
       {calendarStore.calendarList.map(({ id, label }) => (
         <CalendarCheckbox key={id} id={id} label={label} />

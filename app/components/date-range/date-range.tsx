@@ -1,10 +1,11 @@
-import * as React from "react"
-import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
-import { observer } from "mobx-react-lite"
-import { color, typography } from "../../theme"
-import {Button, CheckBox, Radio, RadioGroup, Text} from "@ui-kitten/components"
-import {useEffect} from "react";
-import {useStores} from "../../models";
+import { Radio, RadioGroup, Text } from '@ui-kitten/components';
+import { observer } from 'mobx-react-lite';
+import * as React from 'react';
+import { useEffect } from 'react';
+import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
+
+import { useStores } from '../../models';
+import { color, typography } from '../../theme';
 
 const CONTAINER: ViewStyle = {
   justifyContent: "center",
@@ -30,13 +31,13 @@ export const DateRange = observer(function DateRange(props: DateRangeProps) {
   const { style } = props
   const styles = Object.assign({}, CONTAINER, style)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
-  const {calendarStore} = useStores();
+  const { calendarStore } = useStores()
 
-  useEffect(()=>{
-    if(selectedIndex === 0) {
+  useEffect(() => {
+    if (selectedIndex === 0) {
       calendarStore.setDaysForward(7)
     }
-    if(selectedIndex === 1) {
+    if (selectedIndex === 1) {
       calendarStore.setDaysForward(14)
     }
   }, [selectedIndex])
@@ -44,9 +45,7 @@ export const DateRange = observer(function DateRange(props: DateRangeProps) {
   return (
     <View style={styles}>
       <Text category={"h3"}>Date Range</Text>
-      <RadioGroup
-          selectedIndex={selectedIndex}
-          onChange={index => setSelectedIndex(index)}>
+      <RadioGroup selectedIndex={selectedIndex} onChange={(index) => setSelectedIndex(index)}>
         <Radio>One Week</Radio>
         <Radio>Two Weeks</Radio>
       </RadioGroup>

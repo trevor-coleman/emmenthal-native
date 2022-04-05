@@ -1,9 +1,10 @@
 import { Text, useTheme } from '@ui-kitten/components';
 import { observer } from 'mobx-react-lite';
 import * as React from 'react';
-import { View, ViewStyle } from 'react-native';
+import { ImageStyle, View, ViewStyle } from 'react-native';
 
 import { spacing } from '../../theme';
+import { AutoImage } from '../auto-image/auto-image';
 import { SignInButton } from '../sign-in-button/sign-in-button';
 
 const CONTAINER: ViewStyle = {
@@ -30,8 +31,11 @@ export const Header = observer(function Header(props: HeaderProps) {
 
   return (
     <View style={styles.container}>
+      <View>
+        <AutoImage style={styles.logo} source={require("./emmenthal-logo.png")} />
+      </View>
       <View style={styles.headerView}>
-        <Text category={"h2"}>{"Emmenthal - Find Holes in Your Schedule"}</Text>
+        <Text category={"h1"}>{"Emmenthal - Find Holes in Your Schedule"}</Text>
       </View>
       <View>
         <SignInButton />
@@ -40,10 +44,7 @@ export const Header = observer(function Header(props: HeaderProps) {
   )
 })
 
-function useStyles(): {
-  container: ViewStyle
-  headerView: ViewStyle
-} {
+function useStyles() {
   const theme = useTheme()
   return {
     container: {
@@ -51,15 +52,19 @@ function useStyles(): {
       display: "flex",
       flexDirection: "row",
       padding: spacing[2],
-      backgroundColor: theme["color-primary-200"],
-    },
+      backgroundColor: theme["color-emmenthal-500"],
+    } as ViewStyle,
     headerView: {
       flexGrow: 1,
-    },
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      marginLeft: spacing[4],
+    } as ViewStyle,
+    logo: {
+      height: 50,
+      width: 50,
+      aspectRatio: 1,
+    } as ImageStyle,
   }
-}
-
-interface StyleTypes extends Record<string, ViewStyle> {
-  container: ViewStyle
-  headerView: ViewStyle
 }

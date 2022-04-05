@@ -41,14 +41,17 @@ export const Options = observer(function Options(props: OptionsProps) {
   return (
     <View style={styles}>
       <View style={OPTIONS_SECTION}>
+        <Text category={"h2"}>2. Set Availability</Text>
+      </View>
+      <View style={OPTIONS_SECTION}>
         <DateRange />
       </View>
       <View style={OPTIONS_SECTION}>
-        <Text category={"h2"}>Time Range</Text>
+        <Text category={"h3"}>Time Range</Text>
         <TimeRange />
       </View>
       <View style={OPTIONS_SECTION}>
-        <Text category={"h2"}>Days of the Week</Text>
+        <Text category={"h3"}>Days of the Week</Text>
         <DaysOfTheWeek />
       </View>
     </View>
